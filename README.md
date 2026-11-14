@@ -64,7 +64,7 @@ Para empezar de cero (borra todos los datos): `npm run db:reiniciar` y, si quier
 npm test
 ```
 
-Ejecuta 42 casos (Vitest) contra la base `beautystudio_test`, que se borra y se vuelve a crear en cada corrida. Si usas otra conexión, define `TEST_DATABASE_URL`. Los códigos de los casos (PF-01 a PF-42) son los de la matriz de pruebas del Corte 4.
+Ejecuta 43 casos (Vitest) contra la base `beautystudio_test`, que se borra y se vuelve a crear en cada corrida. Si usas otra conexión, define `TEST_DATABASE_URL`. Los códigos de los casos (PF-01 a PF-43) son los de la matriz de pruebas del Corte 4.
 
 ## 5. Cómo probar WhatsApp en modo simulado
 
@@ -102,7 +102,7 @@ src/modulos/                  Lógica por módulo lógico del diseño (Corte 3, 
 src/app/(publico)/            Páginas de la clienta (P01–P18)
 src/app/panel/                Páginas del panel (A01–A22) y acciones del servidor
 src/app/api/                  Webhook de WhatsApp, archivos privados y planificador externo
-pruebas/                      Pruebas automáticas (PF-01 a PF-42)
+pruebas/                      Pruebas automáticas (PF-01 a PF-43)
 ```
 
 ## 8. Subir a GitHub

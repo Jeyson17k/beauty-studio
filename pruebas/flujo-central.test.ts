@@ -7,7 +7,7 @@ import { identificar, solicitarCodigo, validarCodigo } from "@/modulos/clientas"
 import { guardarCotizacion, registrarSolicitudServicio, rechazarOCancelar, registroDirecto, reprogramar } from "@/modulos/solicitudes";
 import { enviarCotizacion, registrarEnvioManual, procesarAviso, vencerEnviosSinConfirmar } from "@/modulos/whatsapp/servicio";
 import { cargarComprobante, declararExpiracion, registrarAtencion, registrarSaldo, validarAnticipoYConfirmar } from "@/modulos/pagos";
-import { vencerPlazos } from "@/modulos/planificador";
+import { generarRecordatorios, vencerPlazos } from "@/modulos/planificador";
 import { firmaValida } from "@/modulos/whatsapp/cliente";
 import { agendaActiva, aviso, clienta, estado, horasDesdeAhora, reiniciarBase, solicitudServicio, UID, ultimoMensaje } from "./utilidades";
 
@@ -350,6 +350,20 @@ describe("Historial con código de verificación (RF-18)", () => {
     const r = await solicitarCodigo("8444 0000");
     expect(r.ok).toBe(true);
     expect(r.mensaje).toMatch(/Si el número está registrado/);
+  });
+});
+
+describe("Recordatorios (RF-19)", () => {
+  it("PF-43 · genera un solo recordatorio en el panel para citas confirmadas próximas y ninguno para canceladas (RN-19.1, RN-19.3, RN-19.4)", async () => {
+    const s = await hastaConfirmada({ horas: 10 });
+    const c = await hastaConfirmada({ horas: 12 });
+    await rechazarOCancelar(UID, c.id, "Prueba de recordatorio", "andrea");
+    await generarRecordatorios();
+    await generarRecordatorios();
+    const n = await q<{ mensaje: string }>("SELECT mensaje FROM notificacion WHERE tipo = 'Recordatorio'");
+    expect(n).toHaveLength(1);
+    expect(n[0].mensaje).toMatch(/Maquillaje social/);
+    expect(s.cliente.nombre).toBeTruthy();
   });
 });
 
