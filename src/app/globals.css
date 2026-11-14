@@ -1,26 +1,65 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
+/* Marca Beauty Studio: negro, oro y crema (perfil de Instagram de Andrea; variables del prototipo de Figma). */
+@theme {
+  --color-negro-900: #14110d;
+  --color-negro-800: #2e281f;
+  --color-crema-50: #fbf8f2;
+  --color-crema-100: #f7f1e8;
+  --color-crema-200: #f4efe6;
+  --color-crema-300: #f0e3c8;
+  --color-oro-200: #e8d3a6;
+  --color-oro-300: #d9b87a;
+  --color-oro-700: #7a5c24;
+  --color-linea-200: #e5dccb;
+  --color-texto-900: #1a1816;
+  --color-gris-600: #6b6359;
+  --color-ok-100: #e3f1e4;
+  --color-ok-700: #2e7d32;
+  --color-aviso-100: #fff1d6;
+  --color-aviso-700: #9a5b00;
+  --color-error-100: #fbe4e2;
+  --color-error-700: #b3261e;
+  --color-info-100: #e5eef8;
+  --color-info-700: #245a8d;
+  --font-sans: "Inter", "Segoe UI", system-ui, -apple-system, "Helvetica Neue", Arial, sans-serif;
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
+html { -webkit-text-size-adjust: 100%; }
+body { background: var(--color-crema-100); color: var(--color-texto-900); }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+@utility tarjeta {
+  @apply rounded-2xl border border-linea-200 bg-white;
 }
-
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+@utility btn {
+  @apply inline-flex items-center justify-center gap-2 rounded-full px-5 py-2.5 text-sm font-semibold transition disabled:cursor-not-allowed disabled:opacity-50;
+}
+@utility btn-primario {
+  @apply btn bg-negro-900 text-white hover:bg-negro-800;
+}
+@utility btn-oro {
+  @apply btn bg-oro-700 text-white hover:brightness-110;
+}
+@utility btn-borde {
+  @apply btn border border-oro-700 text-oro-700 hover:bg-crema-100;
+}
+@utility btn-peligro {
+  @apply btn border border-error-700 text-error-700 hover:bg-error-100;
+}
+@utility campo {
+  @apply mt-1 block w-full rounded-xl border border-linea-200 bg-white px-3.5 py-2.5 text-[15px] outline-none focus:border-oro-700 focus:ring-2 focus:ring-oro-200;
+}
+@utility etiqueta-campo {
+  @apply block text-sm font-medium text-texto-900;
+}
+@utility ayuda {
+  @apply mt-1 text-xs text-gris-600;
+}
+@utility titulo-seccion {
+  @apply text-lg font-bold text-texto-900;
+}
+@utility tabla {
+  @apply w-full text-left text-sm;
+  & th { @apply border-b border-linea-200 px-3 py-2 text-xs font-semibold uppercase tracking-wide text-gris-600; }
+  & td { @apply border-b border-linea-200 px-3 py-2.5 align-top; }
 }
