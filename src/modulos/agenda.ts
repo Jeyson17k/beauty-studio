@@ -73,6 +73,12 @@ export async function recalcularSesion(c: Db, sesionId: number) {
   await q("UPDATE sesion_curso SET estado = $2 WHERE id = $1", [sesionId, libres > 0 ? SESION.ABIERTA : SESION.LLENA], c);
 }
 
+/** Recalcula la sesión grupal de una solicitud después de cambiar su estado. */
+export async function recalcularSesionDeSolicitud(c: Db, solicitudId: number) {
+  const s = await q1<{ sesion_id: number | null }>("SELECT sesion_id FROM solicitud_actividad WHERE id = $1", [solicitudId], c);
+  if (s?.sesion_id) await recalcularSesion(c, s.sesion_id);
+}
+
 /** Datos para apartar: servicio o clase individual usan su propio intervalo; la clase grupal, un cupo. */
 async function datosReserva(c: PoolClient, sol: Sol) {
   if (sol.tipo === "servicio") {

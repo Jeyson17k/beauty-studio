@@ -6,7 +6,7 @@
 import { q, q1, tx } from "@/lib/db";
 import { ReglaError } from "@/lib/errores";
 import { leerConfig } from "@/lib/config";
-import { apartar, liberar } from "../agenda";
+import { apartar, liberar, recalcularSesionDeSolicitud } from "../agenda";
 import { auditar, notificar } from "../seguridad";
 import { COD, MSG, ORDEN_MSG, SOL } from "../estados";
 import { enviarPlantilla, ErrorWhatsApp, modoWhatsApp } from "./cliente";
@@ -72,6 +72,7 @@ export async function despachar(mensajeId: number, para: string, p: Plantilla) {
 
 /** Modo simulado: a los 2 s llega el aviso «enviado» (o «fallido» si el número termina en 9999). */
 function simularAviso(idExterno: string, para: string) {
+  if (process.env.WHATSAPP_SIM_AUTO === "off") return; // en las pruebas automáticas el aviso se envía a mano
   const falla = para.endsWith("9999");
   setTimeout(() => {
     procesarAviso({
@@ -97,6 +98,7 @@ export async function enviarCotizacion(uid: number, solicitudId: number) {
 
     await apartar(c, solicitudId); // comprueba disponibilidad y aparta en la misma operación
     await q("UPDATE solicitud_actividad SET estado = $2, actualizado_en = now() WHERE id = $1", [solicitudId, SOL.COTIZACION_ENVIO], c);
+    await recalcularSesionDeSolicitud(c, solicitudId); // la sesión grupal puede quedar Llena (RN-04.10)
     const p = plantillaCotizacion({ nombre: d.nombre, actividad: d.actividad, inicio: d.inicio, total: d.precio_total!, anticipo: d.anticipo!, datosPago: cfg.datos_pago });
     const m = await q1<{ id: number }>(
       `INSERT INTO mensaje_whatsapp (cliente_id, solicitud_id, cotizacion_id, tipo, plantilla, estado, origen)
@@ -131,6 +133,7 @@ export async function registrarEnvioManual(uid: number, solicitudId: number, env
       c,
     );
     await q("UPDATE solicitud_actividad SET estado = $2, plazo_pago_hasta = $3, actualizado_en = now() WHERE id = $1", [solicitudId, SOL.PENDIENTE_PAGO, plazo], c);
+    await recalcularSesionDeSolicitud(c, solicitudId);
     await auditar(c, uid, "Registrar envío manual de cotización", "solicitud_actividad", solicitudId, `enviado ${enviadoEn.toISOString()}`);
     return plazo;
   });
