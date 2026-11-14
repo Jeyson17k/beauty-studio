@@ -294,9 +294,11 @@ CREATE TABLE movimiento_inventario (
   tipo VARCHAR(15) NOT NULL,
   cantidad INT NOT NULL,
   motivo VARCHAR(150),
+  costo_unitario NUMERIC(10,2),  -- ajuste del diseño en el desarrollo: costo de la entrada y costo de lo vendido (RN-26.5, RN-26.6)
   creado_en TIMESTAMPTZ NOT NULL DEFAULT now(),
   PRIMARY KEY (id),
-  CHECK (tipo IN ('Entrada','Reserva','Liberación','Venta','Daño','Corrección','Ajuste'))
+  CHECK (tipo IN ('Entrada','Reserva','Liberación','Venta','Daño','Corrección','Ajuste')),
+  CHECK (tipo <> 'Entrada' OR (cantidad > 0 AND costo_unitario IS NOT NULL))
 );
 
 CREATE TABLE venta (

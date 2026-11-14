@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { q, q1 } from "@/lib/db";
+import { q1 } from "@/lib/db";
 import { sesionAdmin } from "@/lib/sesion";
 import { notificacionesPendientes } from "@/modulos/seguridad";
 import { solicitudesPorEstado } from "@/modulos/solicitudes";
@@ -18,14 +18,17 @@ export default async function PanelInicio() {
   const s = (await sesionAdmin())!;
   const hoy = desdeLocal(`${diaLocal(new Date())}T00:00`);
   const [conteo, atencion, notifs, hoyAgenda, proximas, sesiones] = await Promise.all([
-    q1<{ nuevas: number; vencidas: number; pago: number; fallidos: number; encola: number; comprobantes: number }>(`
+    q1<{ nuevas: number; vencidas: number; pago: number; fallidos: number; encola: number; comprobantes: number; pedidos: number; por_entregar: number; bajo_stock: number }>(`
       SELECT (SELECT count(*)::int FROM solicitud_actividad WHERE estado = 'Pendiente de revisión') AS nuevas,
              (SELECT count(*)::int FROM solicitud_actividad WHERE estado = 'Plazo vencido pendiente de revisión') AS vencidas,
              (SELECT count(*)::int FROM solicitud_actividad WHERE estado = 'Pendiente de pago') AS pago,
              (SELECT count(*)::int FROM mensaje_whatsapp m WHERE m.estado = 'Fallido' AND m.tipo <> 'Código de verificación' AND m.creado_en > now() - interval '7 days'
                 AND NOT EXISTS (SELECT 1 FROM mensaje_whatsapp x WHERE x.solicitud_id = m.solicitud_id AND x.tipo = m.tipo AND x.estado <> 'Fallido' AND x.creado_en > m.creado_en)) AS fallidos,
              (SELECT count(*)::int FROM mensaje_whatsapp WHERE estado = 'En cola') AS encola,
-             (SELECT count(*)::int FROM comprobante_pago WHERE estado = 'Pendiente') AS comprobantes`),
+             (SELECT count(*)::int FROM comprobante_pago WHERE estado = 'Pendiente') AS comprobantes,
+             (SELECT count(*)::int FROM pedido WHERE estado = 'Pendiente de confirmación') AS pedidos,
+             (SELECT count(*)::int FROM pedido WHERE estado = 'Reservado' AND estado_pago = 'Pagado') AS por_entregar,
+             (SELECT count(*)::int FROM producto WHERE activo AND stock_actual - stock_reservado <= stock_minimo) AS bajo_stock`),
     solicitudesPorEstado([SOL.PLAZO_VENCIDO, SOL.PENDIENTE_REVISION, SOL.COTIZACION_ENVIO], 8),
     notificacionesPendientes(s.uid, 12),
     agendaAdmin(hoy, new Date(hoy.getTime() + 86_400_000)),
@@ -38,6 +41,9 @@ export default async function PanelInicio() {
     ["Plazo vencido por revisar", c.vencidas, "bg-aviso-100 text-aviso-700", "/panel/solicitudes?estado=Plazo vencido pendiente de revisión"],
     ["Envíos de WhatsApp fallidos", c.fallidos, "bg-error-100 text-error-700", "/panel/mensajes?estado=Fallido"],
     ["Comprobantes por validar", c.comprobantes, "bg-[#eee8dc] text-gris-600", "/panel/solicitudes?estado=Pendiente de pago"],
+    ["Pedidos por confirmar", c.pedidos, "bg-info-100 text-info-700", "/panel/pedidos?estado=Pendiente de confirmación"],
+    ["Pagados por entregar", c.por_entregar, "bg-ok-100 text-ok-700", "/panel/pedidos?estado=Reservado"],
+    ["Bajo stock o agotados", c.bajo_stock, "bg-aviso-100 text-aviso-700", "/panel/productos"],
   ] as const;
   const recordatorios = notifs.filter((n) => n.tipo === "Recordatorio");
   const alertas = notifs.filter((n) => n.tipo !== "Recordatorio");
@@ -48,7 +54,7 @@ export default async function PanelInicio() {
         <span className="rounded-full bg-oro-200 px-3 py-1.5 text-xs font-semibold">🔔 {alertas.length} alertas</span>
       </EncabezadoPanel>
       <div className="space-y-5 p-5 lg:p-8">
-        <div className="grid grid-cols-2 gap-3 xl:grid-cols-4">
+        <div className="grid grid-cols-2 gap-3 md:grid-cols-4 2xl:grid-cols-7">
           {tarjetas.map(([t, n, cls, href]) => (
             <Link key={t} href={href} className={`rounded-2xl p-4 ${cls}`}>
               <p className="text-3xl font-bold">{n}</p>
@@ -114,6 +120,9 @@ export default async function PanelInicio() {
               <Link href="/panel/cursos" className="btn-borde">
                 Programar sesión
               </Link>
+              <Link href="/panel/ventas" className="btn-borde">
+                Registrar venta física
+              </Link>
             </div>
           </section>
         </div>
@@ -178,8 +187,8 @@ export default async function PanelInicio() {
                   <p className="text-xs text-gris-600">{fechaHora(n.creado_en)}</p>
                 </div>
                 <div className="flex shrink-0 gap-3">
-                  {n.entidad === "solicitud_actividad" && n.entidad_id && (
-                    <Link href={`/panel/solicitudes/${n.entidad_id}`} className="font-semibold text-oro-700">
+                  {n.entidad_id && ["solicitud_actividad", "pedido"].includes(n.entidad ?? "") && (
+                    <Link href={n.entidad === "pedido" ? `/panel/pedidos/${n.entidad_id}` : `/panel/solicitudes/${n.entidad_id}`} className="font-semibold text-oro-700">
                       Ver
                     </Link>
                   )}

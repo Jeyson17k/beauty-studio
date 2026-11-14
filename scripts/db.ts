@@ -52,7 +52,7 @@ async function semilla(c: Client) {
      ('Curso grupal de maquillaje social', 'Técnicas de piel, ojos y labios en grupo pequeño. Sesión de 3 horas.', 'grupal', 180, NULL, true)
      ON CONFLICT (nombre) DO NOTHING`,
   );
-  const categoriasGasto = ["Productos e insumos", "Transporte", "Servicios básicos", "Publicidad", "Otros"];
+  const categoriasGasto = ["Costo de servicios y cursos", "Transporte", "Servicios básicos", "Alquiler", "Publicidad", "Otros gastos operativos"];
   for (const n of categoriasGasto) await c.query("INSERT INTO categoria_gasto (nombre) VALUES ($1) ON CONFLICT (nombre) DO NOTHING", [n]);
   const categoriasProducto = ["Maquillaje", "Cuidado de la piel", "Cabello", "Accesorios"];
   for (const n of categoriasProducto) await c.query("INSERT INTO categoria_producto (nombre) VALUES ($1) ON CONFLICT (nombre) DO NOTHING", [n]);

@@ -7,6 +7,7 @@ import { leerConfig } from "@/lib/config";
 import { abrirHistorial, cerrarHistorial, guardarClienta, olvidarClienta, sesionClienta } from "@/lib/sesion";
 import { identificar, solicitarCodigo, validarCodigo } from "@/modulos/clientas";
 import { registrarSolicitudCurso, registrarSolicitudServicio } from "@/modulos/solicitudes";
+import { cambiarCarrito, crearPedido } from "@/modulos/pedidos";
 import type { EstadoForm } from "@/componentes/Formulario";
 
 const txt = (fd: FormData, k: string) => String(fd.get(k) ?? "").trim();
@@ -101,4 +102,37 @@ export async function accionValidarCodigo(_: EstadoForm, fd: FormData): Promise<
 export async function accionCerrarHistorial() {
   await cerrarHistorial();
   redirect("/historial");
+}
+
+// ---------- Catálogo, carrito y pedido (P14 a P18) ----------
+
+async function clientaOIdentificar(siguiente: string) {
+  const s = await sesionClienta();
+  if (!s) redirect(`/identificarse?siguiente=${encodeURIComponent(siguiente)}`);
+  return s;
+}
+
+export async function accionAgregarCarrito(fd: FormData) {
+  const pid = Number(fd.get("producto_id"));
+  const s = await clientaOIdentificar(`/catalogo/${pid}`);
+  await cambiarCarrito(s.cid, pid, Math.max(1, Number(fd.get("cantidad") || 1)), true);
+  redirect("/carrito");
+}
+
+export async function accionCambiarCantidad(fd: FormData) {
+  const s = await clientaOIdentificar("/carrito");
+  await cambiarCarrito(s.cid, Number(fd.get("producto_id")), Number(fd.get("cantidad")));
+  redirect("/carrito");
+}
+
+export async function accionCrearPedido(_: EstadoForm, fd: FormData): Promise<EstadoForm> {
+  let id: number;
+  try {
+    const s = await sesionClienta();
+    if (!s) return { ok: false, error: "Identifícate para continuar." };
+    id = await crearPedido(s.cid, { entrega: txt(fd, "lugar") === "domicilio" ? "delivery" : "retiro", direccion: txt(fd, "direccion"), referencia: txt(fd, "referencia") });
+  } catch (e) {
+    return aResultado(e);
+  }
+  redirect(`/pedido/${id}`);
 }

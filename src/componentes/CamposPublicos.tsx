@@ -24,16 +24,16 @@ export function CamposIdentificacion({ conTitulo = true }: { conTitulo?: boolean
 }
 
 /** Lugar de atención: la dirección solo se pide a domicilio (RN-07.5 a RN-07.7). */
-export function CamposLugar() {
+export function CamposLugar({ etiquetas = ["En el salón", "A domicilio"] }: { etiquetas?: [string, string] } = {}) {
   const [lugar, setLugar] = useState<"local" | "domicilio">("local");
   return (
     <fieldset>
-      <legend className="etiqueta-campo">¿Dónde será la atención?</legend>
+      <legend className="etiqueta-campo">{etiquetas[0] === "En el salón" ? "¿Dónde será la atención?" : "¿Cómo quieres recibirlo?"}</legend>
       <div className="mt-2 grid grid-cols-2 gap-2">
         {(["local", "domicilio"] as const).map((l) => (
           <label key={l} className={`cursor-pointer rounded-xl border p-3 text-center text-sm font-semibold ${lugar === l ? "border-oro-700 bg-crema-300" : "border-linea-200 bg-white"}`}>
             <input type="radio" name="lugar" value={l} checked={lugar === l} onChange={() => setLugar(l)} className="sr-only" />
-            {l === "local" ? "En el salón" : "A domicilio"}
+            {l === "local" ? etiquetas[0] : etiquetas[1]}
           </label>
         ))}
       </div>
@@ -47,7 +47,7 @@ export function CamposLugar() {
             <span className="etiqueta-campo">Referencia</span>
             <input name="referencia" maxLength={150} className="campo" placeholder="Ej.: frente al parque, portón negro" />
           </label>
-          <p className="ayuda">Andrea suma el tiempo de traslado a la duración de la atención.</p>
+          {etiquetas[0] === "En el salón" && <p className="ayuda">Andrea suma el tiempo de traslado a la duración de la atención.</p>}
         </div>
       )}
     </fieldset>

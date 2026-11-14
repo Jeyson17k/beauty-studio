@@ -3,11 +3,13 @@
 // - Plazo de 24 h vencido → «Plazo vencido pendiente de revisión»; NO libera la reserva (RN-12.4, RN-12.5).
 // - Códigos de verificación vencidos (RN-18.11).
 // - Recordatorios en el panel para actividades confirmadas próximas (RF-19).
+// - Reservas de pedidos de 48 h sin pago verificado → Expirado y se liberan las unidades (RN-24.8).
 import { q, tx, pool } from "@/lib/db";
 import { leerConfig } from "@/lib/config";
 import { auditar, notificar } from "./seguridad";
 import { SOL } from "./estados";
 import { vencerEnviosSinConfirmar } from "./whatsapp/servicio";
+import { vencerReservasPedidos } from "./pedidos";
 import { fechaHora } from "@/lib/tiempo";
 
 export async function vencerPlazos() {
@@ -67,7 +69,8 @@ export async function ejecutarTareas() {
     const plazos = await vencerPlazos();
     const codigos = await vencerCodigos();
     const recordatorios = await generarRecordatorios();
-    return { envios, plazos, codigos, recordatorios, en: new Date().toISOString() };
+    const pedidos = await vencerReservasPedidos();
+    return { envios, plazos, codigos, recordatorios, pedidos, en: new Date().toISOString() };
   } finally {
     corriendo = false;
   }

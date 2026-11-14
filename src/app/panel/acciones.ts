@@ -13,6 +13,8 @@ import { enviarAvisoConfirmacion, enviarCotizacion, registrarAvisoManual, regist
 import { cargarComprobante, declararExpiracion, rechazarComprobante, registrarAtencion, registrarSaldo, validarAnticipoYConfirmar } from "@/modulos/pagos";
 import { cancelarSesion, guardarCurso, guardarServicio, habilitarSesion, marcarSesionRealizada, programarSesion } from "@/modulos/catalogo";
 import { ejecutarTareas } from "@/modulos/planificador";
+import { cambiarEntrega, cancelarPedido, confirmarYReservar, registrarPagoPedido } from "@/modulos/pedidos";
+import { eliminarGasto, guardarProducto, registrarAjuste, registrarEntrada, registrarGasto, registrarVentaDirecta } from "@/modulos/inventario";
 import type { EstadoForm } from "@/componentes/Formulario";
 
 const txt = (fd: FormData, k: string) => String(fd.get(k) ?? "").trim();
@@ -267,7 +269,7 @@ export async function accionGuardarConfig(_: EstadoForm, fd: FormData) {
     for (const clave of Object.keys(CONFIG_INICIAL) as ClaveConfig[]) {
       const v = txt(fd, clave);
       if (!v) continue;
-      if (clave !== "datos_pago" && clave !== "lugar_local" && !(Number(v) > 0)) throw new ReglaError(`Valor no válido para ${clave}.`);
+      if (!["datos_pago", "lugar_local", "whatsapp_negocio"].includes(clave) && !(Number(v) > 0)) throw new ReglaError(`Valor no válido para ${clave}.`);
       await q(
         "INSERT INTO configuracion (clave, valor, descripcion) VALUES ($1,$2,$3) ON CONFLICT (clave) DO UPDATE SET valor = EXCLUDED.valor",
         [clave, v.slice(0, 100), CONFIG_INICIAL[clave].descripcion],
@@ -278,10 +280,88 @@ export async function accionGuardarConfig(_: EstadoForm, fd: FormData) {
   });
 }
 
-export async function accionEjecutarPlanificador(_: EstadoForm) {
+export async function accionEjecutarPlanificador() {
   return ejecutar(async () => {
     await uid();
     const r = await ejecutarTareas();
     return r ? `Planificador ejecutado: ${r.envios} envío(s) vencido(s), ${r.plazos} plazo(s) vencido(s), ${r.codigos} código(s) vencido(s), ${r.recordatorios} recordatorio(s).` : "El planificador ya se estaba ejecutando.";
   });
+}
+
+// ---------- A17 a A22: pedidos, inventario, ventas, gastos (CU-30 a CU-34) ----------
+export async function accionConfirmarPedido(_: EstadoForm, fd: FormData) {
+  return ejecutar(async () => {
+    const costo = txt(fd, "costo_entrega");
+    await confirmarYReservar(await uid(), Number(fd.get("pedido_id")), costo === "" ? null : Number(costo));
+    return "Pedido confirmado. Las unidades quedaron reservadas por 48 horas.";
+  }, ["/panel/pedidos", "/panel/productos"]);
+}
+
+export async function accionPagoPedido(_: EstadoForm, fd: FormData) {
+  return ejecutar(async () => {
+    await registrarPagoPedido(await uid(), Number(fd.get("pedido_id")));
+    return "Pago registrado. El pedido ya no expira.";
+  }, ["/panel/pedidos"]);
+}
+
+export async function accionEntregaPedido(_: EstadoForm, fd: FormData) {
+  return ejecutar(async () => {
+    const r = await cambiarEntrega(await uid(), Number(fd.get("pedido_id")), txt(fd, "entrega"));
+    return r.cerrado ? "Pedido entregado y cerrado: se registró la venta y la salida de inventario." : "Estado de entrega actualizado.";
+  }, ["/panel/pedidos", "/panel/productos"]);
+}
+
+export async function accionCancelarPedido(_: EstadoForm, fd: FormData) {
+  return ejecutar(async () => {
+    await cancelarPedido(await uid(), Number(fd.get("pedido_id")), txt(fd, "motivo"));
+    return "Pedido cancelado y unidades liberadas.";
+  }, ["/panel/pedidos", "/panel/productos"]);
+}
+
+export async function accionGuardarProducto(_: EstadoForm, fd: FormData) {
+  return ejecutar(async () => {
+    await guardarProducto(await uid(), {
+      id: Number(fd.get("id")) || undefined, categoria_id: Number(fd.get("categoria_id")), nombre: txt(fd, "nombre"), descripcion: txt(fd, "descripcion") || null,
+      foto_url: txt(fd, "foto_url") || null, precio_venta: num(fd, "precio_venta"), stock_minimo: Number(txt(fd, "stock_minimo") || 0),
+      visible_publico: fd.get("visible_publico") === "on", activo: fd.get("activo") === "on",
+    });
+    return "Producto guardado.";
+  }, ["/panel/productos", "/catalogo"]);
+}
+
+export async function accionEntrada(_: EstadoForm, fd: FormData) {
+  return ejecutar(async () => {
+    await registrarEntrada(await uid(), Number(fd.get("producto_id")), Number(fd.get("cantidad")), num(fd, "costo_unitario"), txt(fd, "motivo"));
+    return "Entrada registrada.";
+  }, ["/panel/productos"]);
+}
+
+export async function accionAjuste(_: EstadoForm, fd: FormData) {
+  return ejecutar(async () => {
+    await registrarAjuste(await uid(), Number(fd.get("producto_id")), Number(fd.get("cantidad")), txt(fd, "tipo") === "Daño" ? "Daño" : "Corrección", txt(fd, "motivo"));
+    return "Ajuste registrado.";
+  }, ["/panel/productos"]);
+}
+
+export async function accionVentaDirecta(_: EstadoForm, fd: FormData) {
+  return ejecutar(async () => {
+    const ids = fd.getAll("producto_id").map(Number);
+    const cant = fd.getAll("cantidad").map(Number);
+    const r = await registrarVentaDirecta(await uid(), ids.map((productoId, i) => ({ productoId, cantidad: cant[i] || 0 })), txt(fd, "nota"));
+    return `Venta #${r.ventaId} registrada por ${moneda(r.total)}. Se descontaron las existencias.`;
+  }, ["/panel/ventas", "/panel/productos"]);
+}
+
+export async function accionGasto(_: EstadoForm, fd: FormData) {
+  return ejecutar(async () => {
+    await registrarGasto(await uid(), { categoriaId: Number(fd.get("categoria_id")), concepto: txt(fd, "concepto"), monto: num(fd, "monto"), fecha: txt(fd, "fecha"), observacion: txt(fd, "observacion") });
+    return "Gasto registrado.";
+  }, ["/panel/gastos"]);
+}
+
+export async function accionEliminarGasto(_: EstadoForm, fd: FormData) {
+  return ejecutar(async () => {
+    await eliminarGasto(await uid(), Number(fd.get("gasto_id")));
+    return "Gasto eliminado.";
+  }, ["/panel/gastos"]);
 }

@@ -11,7 +11,8 @@
     "db:semilla": "tsx scripts/db.ts semilla",
     "db:reiniciar": "tsx scripts/db.ts reiniciar",
     "test": "vitest run",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "db:demo": "tsx scripts/demo.ts"
   },
   "dependencies": {
     "bcryptjs": "^3.0.3",

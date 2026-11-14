@@ -11,6 +11,7 @@ export const CONFIG_INICIAL = {
   reserva_pedido_horas: { valor: "48", descripcion: "Vigencia de la reserva de productos de un pedido (RN-24.7)" },
   recordatorio_horas: { valor: "24", descripcion: "Anticipación de los recordatorios del panel (RF-19)" },
   datos_pago: { valor: "la cuenta que Andrea indique por este chat", descripcion: "Texto de la variable {{6}} de la plantilla de cotización" },
+  whatsapp_negocio: { valor: "+50586190898", descripcion: "WhatsApp del negocio al que la clienta envía su pedido (RF-23)" },
   lugar_local: { valor: "mi salón en Los Cedros, León", descripcion: "Lugar de atención en el aviso de confirmación" },
 } as const;
 

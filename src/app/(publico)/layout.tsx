@@ -29,14 +29,15 @@ export default async function LayoutPublico({ children }: { children: React.Reac
         </div>
       )}
       <main className="flex-1 pb-24">{children}</main>
-      <nav className="fixed bottom-0 left-1/2 z-20 grid w-full max-w-[560px] -translate-x-1/2 grid-cols-4 border-t border-linea-200 bg-white text-center text-[13px]">
+      <nav className="fixed bottom-0 left-1/2 z-20 grid w-full max-w-[560px] -translate-x-1/2 grid-cols-5 border-t border-linea-200 bg-white text-center text-[13px]">
         {[
           ["/", "Inicio"],
           ["/servicios", "Servicios"],
           ["/cursos", "Cursos"],
+          ["/catalogo", "Catálogo"],
           ["/historial", "Historial"],
         ].map(([href, t]) => (
-          <Link key={href} href={href} className="py-3.5 font-medium text-gris-600 hover:text-oro-700">
+          <Link key={href} href={href} className="py-3.5 text-[12px] font-medium sm:text-[13px] text-gris-600 hover:text-oro-700">
             {t}
           </Link>
         ))}
