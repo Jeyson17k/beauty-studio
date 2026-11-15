@@ -195,14 +195,14 @@ export async function ocupacionPublica(desde: Date, hasta: Date) {
 
 export type FilaAgenda = {
   id: number; inicio: Date; fin: Date; estado: string; solicitud_id: number | null; sesion_id: number | null;
-  clienta: string | null; actividad: string; fuera_local: boolean | null; inscritas: number | null; capacidad: number | null; estado_solicitud: string | null;
+  clienta: string | null; actividad: string; fuera_local: boolean | null; inscritas: number | null; capacidad: number | null; estado_solicitud: string | null; directo: boolean | null; plazo: Date | null;
 };
 
 /** Agenda del panel (CU-13) con el detalle de cada intervalo. */
 export async function agendaAdmin(desde: Date, hasta: Date): Promise<FilaAgenda[]> {
   return q<FilaAgenda>(
     `SELECT a.id, a.inicio, a.fin, a.estado, a.solicitud_id, a.sesion_id, c.nombre AS clienta,
-            COALESCE(sv.nombre, cu1.nombre, cu2.nombre, 'Actividad') AS actividad, s.fuera_local, s.estado AS estado_solicitud,
+            COALESCE(sv.nombre, cu1.nombre, cu2.nombre, 'Actividad') AS actividad, s.fuera_local, s.estado AS estado_solicitud, s.registro_directo AS directo, s.plazo_pago_hasta AS plazo,
             CASE WHEN a.sesion_id IS NOT NULL THEN (SELECT count(*)::int FROM solicitud_actividad x WHERE x.sesion_id = a.sesion_id AND x.estado = ANY($3)) END AS inscritas,
             ses2.capacidad
      FROM actividad_agenda a
@@ -214,5 +214,58 @@ export async function agendaAdmin(desde: Date, hasta: Date): Promise<FilaAgenda[
      WHERE a.estado IN ('Provisional','Confirmada') AND a.inicio < $2 AND a.fin > $1
      ORDER BY a.inicio`,
     [desde, hasta, SOL_CON_RESERVA],
+  );
+}
+
+/** Entrada del calendario de selección: «o» ocupado (bloquea), «e» en proceso (cotización enviada, 24 h para el anticipo; también bloquea) o «p» solicitud pendiente de revisión (solo aviso, RN-05.7). */
+export type CasillaCalendario = { i: string; f: string; t: "o" | "e" | "p"; e?: string };
+
+/**
+ * Datos del calendario para elegir fecha y hora (próximos 120 días). La vista pública solo trae intervalos ocupados, sin datos personales (RN-05.6).
+ * El panel de Andrea suma el nombre de la clienta, el origen (web o registro directo) y las solicitudes aún sin cotizar.
+ */
+export async function datosCalendario(admin: boolean): Promise<CasillaCalendario[]> {
+  const desde = new Date();
+  const hasta = new Date(Date.now() + 120 * 86_400_000);
+  if (!admin) {
+    const o = await ocupacionPublica(desde, hasta);
+    return o.map((x) => ({ i: new Date(x.inicio).toISOString(), f: new Date(x.fin).toISOString(), t: "o" as const }));
+  }
+  const filas = await agendaAdmin(desde, hasta);
+  const ocupados: CasillaCalendario[] = filas.map((f) => ({
+    i: new Date(f.inicio).toISOString(), f: new Date(f.fin).toISOString(), t: f.estado === "Provisional" ? "e" : "o",
+    e: `${f.actividad}${f.clienta ? ` · ${f.clienta}` : ""}${f.estado === "Provisional" ? ` · en proceso${f.plazo ? `, el anticipo vence ${fechaHora(f.plazo)}` : ""}` : ""}`,
+  }));
+  const pend = await q<{ inicio: Date; actividad: string; clienta: string; directo: boolean; dur: number }>(
+    `SELECT s.inicio_solicitado AS inicio, COALESCE(sv.nombre, cu.nombre, 'Actividad') AS actividad, c.nombre AS clienta, s.registro_directo AS directo,
+            CASE WHEN s.tipo = 'curso' THEN 180 ELSE 60 END AS dur
+     FROM solicitud_actividad s
+     JOIN cliente c ON c.id = s.cliente_id
+     LEFT JOIN servicio sv ON sv.id = s.servicio_id
+     LEFT JOIN sesion_curso ses ON ses.id = s.sesion_id LEFT JOIN curso cu ON cu.id = ses.curso_id
+     WHERE s.estado = 'Pendiente de revisión' AND s.inicio_solicitado IS NOT NULL AND s.inicio_solicitado >= $1 AND s.inicio_solicitado < $2
+     ORDER BY s.inicio_solicitado`,
+    [desde, hasta],
+  );
+  const pendientes: CasillaCalendario[] = pend.map((x) => ({
+    i: new Date(x.inicio).toISOString(), f: new Date(new Date(x.inicio).getTime() + x.dur * 60_000).toISOString(), t: "p",
+    e: `${x.actividad} · ${x.clienta} · ${x.directo ? "registrada por Andrea" : "solicitada en la web"}`,
+  }));
+  return [...ocupados, ...pendientes];
+}
+
+export type PendienteAgenda = { id: number; inicio: Date; actividad: string; clienta: string; directo: boolean; fuera_local: boolean };
+
+/** Solicitudes aún sin cotizar con fecha pedida: no bloquean horario (RN-05.7), pero Andrea las ve en la agenda, vengan de la web o de su registro directo. */
+export async function pendientesAgenda(desde: Date, hasta: Date): Promise<PendienteAgenda[]> {
+  return q<PendienteAgenda>(
+    `SELECT s.id, s.inicio_solicitado AS inicio, COALESCE(sv.nombre, cu.nombre, 'Actividad') AS actividad, c.nombre AS clienta, s.registro_directo AS directo, s.fuera_local
+     FROM solicitud_actividad s
+     JOIN cliente c ON c.id = s.cliente_id
+     LEFT JOIN servicio sv ON sv.id = s.servicio_id
+     LEFT JOIN sesion_curso ses ON ses.id = s.sesion_id LEFT JOIN curso cu ON cu.id = ses.curso_id
+     WHERE s.estado = 'Pendiente de revisión' AND s.inicio_solicitado >= $1 AND s.inicio_solicitado < $2
+     ORDER BY s.inicio_solicitado`,
+    [desde, hasta],
   );
 }

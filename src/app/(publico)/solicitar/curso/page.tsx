@@ -5,42 +5,47 @@ import { cursosActivos, sesionesAbiertas } from "@/modulos/catalogo";
 import { sesionClienta } from "@/lib/sesion";
 import { fecha, hora, minimoLocal } from "@/lib/tiempo";
 import { Vacio } from "@/componentes/ui";
+import { datosCalendario } from "@/modulos/agenda";
+import { SelectorCalendario } from "@/componentes/SelectorCalendario";
 import { accionSolicitarCurso } from "../../acciones";
+import { EncabezadoPagina, PildorasNumeradas } from "@/componentes/publico";
 
 export const dynamic = "force-dynamic";
 export const metadata = { title: "Solicitar curso" };
 
 // P09 Solicitar curso o inscripción (CU-04). Al elegir Cursos se deshabilitan los servicios (RN-06.3).
 export default async function SolicitarCurso({ searchParams }: { searchParams: Promise<{ curso?: string; sesion?: string }> }) {
-  const [sp, cursos, clienta] = await Promise.all([searchParams, cursosActivos(), sesionClienta()]);
+  const [sp, cursos, clienta, casillas] = await Promise.all([searchParams, cursosActivos(), sesionClienta(), datosCalendario(false)]);
   const elegido = cursos.find((c) => String(c.id) === sp.curso) ?? null;
   const sesiones = elegido?.modalidad === "grupal" ? (await sesionesAbiertas(elegido.id)).filter((s) => s.libres > 0) : [];
   return (
-    <div className="px-5 py-6">
-      <div className="grid grid-cols-2 gap-2 rounded-full bg-crema-300 p-1 text-center text-sm font-semibold">
-        <Link href="/solicitar/servicio" className="rounded-full py-2 text-texto-900">
-          Servicios de belleza
-        </Link>
-        <span className="rounded-full bg-negro-900 py-2 text-white">Cursos</span>
-      </div>
-      <h1 className="mt-5 text-2xl font-bold">Solicitar curso</h1>
-
+    <div>
+      <EncabezadoPagina titulo="Solicitar curso" subtitulo="Elige el curso. El formulario se adapta a la modalidad: individual o grupal.">
+        <div className="mt-5 grid max-w-sm grid-cols-2 gap-1 rounded-full bg-white/10 p-1 text-center text-sm font-semibold">
+          <Link href="/solicitar/servicio" className="rounded-full py-2 text-white/80 hover:text-oro-200">
+            Servicios de belleza
+          </Link>
+          <span className="oro-degradado rounded-full py-2 text-negro-950">Cursos</span>
+        </div>
+      </EncabezadoPagina>
+      <div className="contenedor grid gap-6 py-8 md:py-12 lg:grid-cols-[1.5fr_1fr] lg:items-start">
+      <div>
       {/* Paso 1: elegir el curso (el formulario se adapta a la modalidad, RN-06.5) */}
-      <div className="mt-4 grid gap-2">
+      <div className="grid gap-2 sm:grid-cols-2">
         {cursos.map((c) => (
           <Link
             key={c.id}
             href={`/solicitar/curso?curso=${c.id}`}
-            className={`rounded-xl border p-3 text-sm ${elegido?.id === c.id ? "border-oro-700 bg-crema-300" : "border-linea-200 bg-white"}`}
+            className={`rounded-xl border p-4 text-sm transition ${elegido?.id === c.id ? "border-negro-900 bg-negro-900 text-white" : "border-linea-200 bg-white hover:border-oro-700"}`}
           >
             <span className="font-semibold">{c.nombre}</span>
-            <span className="block text-xs text-gris-600">{c.modalidad === "grupal" ? "Clase grupal: eliges una sesión programada" : "Clase individual: eliges fecha y hora"}</span>
+            <span className={`block text-xs ${elegido?.id === c.id ? "text-oro-200" : "text-gris-600"}`}>{c.modalidad === "grupal" ? "Clase grupal: eliges una sesión programada" : "Clase individual: eliges fecha y hora"}</span>
           </Link>
         ))}
       </div>
 
       {elegido && (
-        <div className="tarjeta mt-5 p-4">
+        <div className="tarjeta mt-5 p-5 md:p-7">
           {elegido.modalidad === "grupal" && sesiones.length === 0 ? (
             <Vacio>No hay sesiones con cupos disponibles para este curso.</Vacio>
           ) : (
@@ -48,10 +53,10 @@ export default async function SolicitarCurso({ searchParams }: { searchParams: P
               <input type="hidden" name="curso_id" value={elegido.id} />
               {!clienta && <CamposIdentificacion />}
               {elegido.modalidad === "individual" ? (
-                <label className="block">
+                <div>
                   <span className="etiqueta-campo">Fecha y hora de la clase (3 horas)</span>
-                  <input type="datetime-local" name="inicio" required min={minimoLocal()} className="campo" />
-                </label>
+                  <SelectorCalendario casillas={casillas} minimo={minimoLocal()} duracionMin={180} />
+                </div>
               ) : (
                 <fieldset>
                   <legend className="etiqueta-campo">Sesión</legend>
@@ -77,6 +82,31 @@ export default async function SolicitarCurso({ searchParams }: { searchParams: P
           )}
         </div>
       )}
+      </div>
+      <PasosLaterales />
+      </div>
     </div>
   );
 }
+
+function PasosLaterales() {
+  return (
+    <aside className="hidden rounded-3xl bg-negro-950 p-6 text-white lg:block">
+      <p className="font-titulo text-lg font-semibold uppercase tracking-[0.16em] text-oro-300">Así sigue tu solicitud</p>
+      <div className="mt-5">
+        <PildorasNumeradas
+          items={[
+            "Andrea revisa tu solicitud.",
+            "Te envía la cotización por WhatsApp.",
+            "Pagas el anticipo del 10 % en 24 horas.",
+            "Andrea verifica el pago y confirma tu cita.",
+          ]}
+        />
+      </div>
+      <Link href="/disponibilidad" className="btn mt-6 w-full border border-white/20 text-white hover:border-oro-300">
+        Ver horarios ocupados
+      </Link>
+    </aside>
+  );
+}
+

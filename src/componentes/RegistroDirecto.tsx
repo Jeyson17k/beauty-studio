@@ -1,13 +1,14 @@
 "use client";
 import { useState } from "react";
 import { CamposLugar } from "./CamposPublicos";
+import { SelectorCalendario, type Casilla } from "./SelectorCalendario";
 
 type Op = { id: number; nombre: string };
 type Ses = { id: number; curso_id: number; texto: string };
 
 /** Campos del registro directo (A11): el formulario se adapta a servicio, clase individual o sesión grupal (RN-17.2). */
-export function CamposRegistroDirecto({ servicios, cursos, sesiones, minimo }: { servicios: Op[]; cursos: (Op & { modalidad: string })[]; sesiones: Ses[]; minimo: string }) {
-  const [tipo, setTipo] = useState<"servicio" | "curso">("servicio");
+export function CamposRegistroDirecto({ servicios, cursos, sesiones, minimo, casillas, tipoInicial = "servicio" }: { servicios: Op[]; cursos: (Op & { modalidad: string })[]; sesiones: Ses[]; minimo: string; casillas: Casilla[]; tipoInicial?: "servicio" | "curso" }) {
+  const [tipo, setTipo] = useState<"servicio" | "curso">(tipoInicial);
   const [cursoId, setCursoId] = useState<number>(cursos[0]?.id ?? 0);
   const curso = cursos.find((c) => c.id === cursoId);
   return (
@@ -32,10 +33,10 @@ export function CamposRegistroDirecto({ servicios, cursos, sesiones, minimo }: {
               ))}
             </select>
           </label>
-          <label className="block">
+          <div>
             <span className="etiqueta-campo">Fecha y hora</span>
-            <input type="datetime-local" name="inicio" required min={minimo} className="campo" />
-          </label>
+          <SelectorCalendario casillas={casillas} minimo={minimo} detalle />
+          </div>
           <CamposLugar />
         </>
       ) : (
@@ -62,10 +63,10 @@ export function CamposRegistroDirecto({ servicios, cursos, sesiones, minimo }: {
               </select>
             </label>
           ) : (
-            <label className="block">
+            <div>
               <span className="etiqueta-campo">Fecha y hora de la clase (3 horas)</span>
-              <input type="datetime-local" name="inicio" required min={minimo} className="campo" />
-            </label>
+              <SelectorCalendario casillas={casillas} minimo={minimo} duracionMin={180} detalle />
+            </div>
           )}
         </>
       )}

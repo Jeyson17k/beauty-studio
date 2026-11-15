@@ -51,6 +51,9 @@ export default async function PanelInicio() {
   return (
     <>
       <EncabezadoPanel titulo="Panel de inicio">
+        <Link href="/panel/registrar" className="btn-primario">
+          + Registrar por una clienta
+        </Link>
         <span className="rounded-full bg-oro-200 px-3 py-1.5 text-xs font-semibold">🔔 {alertas.length} alertas</span>
       </EncabezadoPanel>
       <div className="space-y-5 p-5 lg:p-8">
