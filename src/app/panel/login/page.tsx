@@ -1,6 +1,8 @@
+import Link from "next/link";
 import { redirect } from "next/navigation";
 import { Formulario } from "@/componentes/Formulario";
-import { Logo } from "@/componentes/ui";
+import { CampoPassword } from "@/componentes/CampoPassword";
+import { PantallaAcceso } from "@/componentes/PantallaAcceso";
 import { sesionAdmin } from "@/lib/sesion";
 import { accionLogin } from "../acciones";
 
@@ -11,32 +13,31 @@ export default async function Login({ searchParams }: { searchParams: Promise<{ 
   if (await sesionAdmin()) redirect("/panel");
   const { siguiente } = await searchParams;
   return (
-    <div className="grid min-h-dvh lg:grid-cols-2">
-      <div className="hidden flex-col justify-between bg-negro-900 p-10 text-white lg:flex">
-        <Logo claro />
-        <div>
-          <p className="text-3xl font-bold leading-tight">Panel de administración</p>
-          <p className="mt-2 text-oro-200">Solicitudes, cotizaciones, comprobantes y agenda en un solo lugar.</p>
-        </div>
-        <p className="text-xs text-oro-200">Andrea Paola · Los Cedros, León</p>
+    <PantallaAcceso>
+      <h2 className="font-titulo text-2xl font-semibold uppercase tracking-wide">Iniciar sesión</h2>
+      <p className="mt-1 text-sm text-gris-600">Bienvenida de nuevo, Andrea.</p>
+      <Formulario accion={accionLogin} boton="Entrar" claseBoton="btn oro-degradado acc-boton" botonAncho className="mt-6 space-y-4">
+        <input type="hidden" name="siguiente" value={siguiente ?? "/panel"} />
+        <label className="block">
+          <span className="etiqueta-campo">Usuario</span>
+          <input name="usuario" required autoComplete="username" autoFocus className="campo" />
+        </label>
+        <CampoPassword />
+      </Formulario>
+      <div className="mt-5 flex flex-wrap items-center justify-between gap-2 text-sm font-semibold text-oro-700">
+        <Link href="/panel/login/recuperar?que=password" className="hover:underline">
+          ¿Olvidaste tu contraseña?
+        </Link>
+        <Link href="/panel/login/recuperar?que=usuario" className="hover:underline">
+          ¿Olvidaste tu usuario?
+        </Link>
+        <Link href="/panel/login/recuperar?que=correo" className="hover:underline">
+          Perdí mi correo
+        </Link>
       </div>
-      <div className="flex items-center justify-center bg-crema-200 p-6">
-        <div className="tarjeta w-full max-w-sm p-6">
-          <h1 className="text-xl font-bold">Iniciar sesión</h1>
-          <p className="mt-1 text-sm text-gris-600">Solo para la administradora.</p>
-          <Formulario accion={accionLogin} boton="Entrar" botonAncho className="mt-5 space-y-4">
-            <input type="hidden" name="siguiente" value={siguiente ?? "/panel"} />
-            <label className="block">
-              <span className="etiqueta-campo">Usuario</span>
-              <input name="usuario" required autoComplete="username" className="campo" />
-            </label>
-            <label className="block">
-              <span className="etiqueta-campo">Contraseña</span>
-              <input name="password" type="password" required autoComplete="current-password" className="campo" />
-            </label>
-          </Formulario>
-        </div>
-      </div>
-    </div>
+      <Link href="/" className="mt-5 block border-t border-linea-200 pt-4 text-center text-xs text-gris-600 hover:text-oro-700">
+        ← Ir a la página de Beauty Studio
+      </Link>
+    </PantallaAcceso>
   );
 }
