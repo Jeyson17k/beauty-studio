@@ -23,7 +23,7 @@ function Enviar({ texto, clase, confirmar }: { texto: string; clase: string; con
 }
 
 export function Formulario({
-  accion, children, boton = "Guardar", claseBoton = "btn-primario", confirmar, className = "space-y-4", reiniciar = false, botonAncho = false,
+  accion, children, boton = "Guardar", claseBoton = "btn-primario", confirmar, className = "space-y-4", reiniciar = false, botonAncho = false, alExito,
 }: {
   accion: (prev: EstadoForm, fd: FormData) => Promise<EstadoForm>;
   children?: React.ReactNode;
@@ -33,12 +33,14 @@ export function Formulario({
   className?: string;
   reiniciar?: boolean;
   botonAncho?: boolean;
+  alExito?: () => void;
 }) {
   const [estado, ejecutar] = useActionState(accion, null);
   const ref = useRef<HTMLFormElement>(null);
   useEffect(() => {
     if (estado?.ok && reiniciar) ref.current?.reset();
-  }, [estado, reiniciar]);
+    if (estado?.ok) alExito?.();
+  }, [estado, reiniciar, alExito]);
   return (
     <form ref={ref} action={ejecutar} className="space-y-3" encType="multipart/form-data">
       {children && <div className={className}>{children}</div>}

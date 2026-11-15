@@ -1,17 +1,22 @@
 import { CONFIG_INICIAL, leerConfig } from "@/lib/config";
+import { sesionAdmin } from "@/lib/sesion";
 import { ultimaAuditoria } from "@/modulos/seguridad";
+import { ocultarCorreo, tieneClaveEmergencia, usuarioPorId } from "@/modulos/cuenta";
+import { CambiarContrasena, CambiarUsuario, ClaveEmergencia, ProbarCorreo, RegistrarCorreo } from "@/componentes/CuentaCodigos";
+import { modoCorreo } from "@/lib/correo";
 import { modoWhatsApp } from "@/modulos/whatsapp/cliente";
 import { Formulario } from "@/componentes/Formulario";
 import { EncabezadoPanel } from "@/componentes/ui";
 import { fechaHora } from "@/lib/tiempo";
-import { accionCambiarPassword, accionEjecutarPlanificador, accionGuardarConfig } from "../../acciones";
+import { accionEjecutarPlanificador, accionGuardarConfig } from "../../acciones";
 
 export const dynamic = "force-dynamic";
 export const metadata = { title: "Configuración" };
 
 // Parámetros editables (tabla configuracion), cambio de contraseña y auditoría (RNF-08).
 export default async function Configuracion() {
-  const [cfg, auditoria] = await Promise.all([leerConfig(), ultimaAuditoria(40)]);
+  const [cfg, auditoria, yo] = await Promise.all([leerConfig(), ultimaAuditoria(40), sesionAdmin().then((s) => (s ? usuarioPorId(s.uid) : null))]);
+  const correoOculto = yo?.correo ? ocultarCorreo(yo.correo) : null;
   return (
     <>
       <EncabezadoPanel titulo="Configuración" />
@@ -37,17 +42,31 @@ export default async function Configuracion() {
             <Formulario accion={accionEjecutarPlanificador} boton="Ejecutar ahora" claseBoton="btn-borde" className="mt-3 space-y-2" />
           </section>
           <section className="tarjeta p-4">
+            <h2 className="font-bold">Correo de recuperación</h2>
+            <RegistrarCorreo correoOculto={correoOculto} />
+            {correoOculto && (
+              <div className="mt-4 border-t border-linea-200 pt-3">
+                <p className="text-xs text-gris-600">
+                  Envío de correos: modo <strong>{modoCorreo()}</strong>
+                  {modoCorreo() === "simulado" && " (los códigos se muestran en pantalla; para correos reales usa MAIL_MODE=resend o smtp en .env.local)"}.
+                </p>
+                <div className="mt-2">
+                  <ProbarCorreo />
+                </div>
+              </div>
+            )}
+          </section>
+          <section className="tarjeta p-4">
+            <h2 className="font-bold">Clave de emergencia</h2>
+            <ClaveEmergencia tiene={await tieneClaveEmergencia(yo?.id ?? 0)} />
+          </section>
+          <section className="tarjeta p-4">
+            <h2 className="font-bold">Nombre de usuario</h2>
+            <CambiarUsuario usuarioActual={yo?.usuario ?? ""} correoOculto={correoOculto} />
+          </section>
+          <section className="tarjeta p-4">
             <h2 className="font-bold">Cambiar contraseña</h2>
-            <Formulario accion={accionCambiarPassword} boton="Cambiar contraseña" claseBoton="btn-borde" className="mt-3 space-y-3" reiniciar>
-              <label className="block">
-                <span className="etiqueta-campo">Nueva contraseña (mínimo 10 caracteres)</span>
-                <input type="password" name="nueva" required minLength={10} autoComplete="new-password" className="campo" />
-              </label>
-              <label className="block">
-                <span className="etiqueta-campo">Repetir</span>
-                <input type="password" name="repetir" required minLength={10} autoComplete="new-password" className="campo" />
-              </label>
-            </Formulario>
+            <CambiarContrasena correoOculto={correoOculto} />
           </section>
           <section className="tarjeta p-4">
             <h2 className="font-bold">Auditoría reciente</h2>
