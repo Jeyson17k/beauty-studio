@@ -2,7 +2,7 @@
 // El texto armado aquí se usa en el modo simulado, en la vista previa del panel y en el envío manual (RN-11.7).
 import { fechaLarga, montoTexto } from "@/lib/tiempo";
 
-export type TipoMensaje = "Cotización" | "Aviso de confirmación" | "Código de verificación";
+export type TipoMensaje = "Cotización" | "Aviso de confirmación" | "Código de verificación" | "Prueba";
 
 export type Plantilla = {
   tipo: TipoMensaje;
@@ -48,5 +48,15 @@ export function plantillaCodigo(codigo: string, vigenciaMin: number): Plantilla 
     parametros: [codigo],
     codigo,
     texto: `${codigo} es tu código de verificación. Por tu seguridad, no lo compartas. Este código caduca en ${vigenciaMin} minutos.`,
+  };
+}
+
+/** Mensaje de prueba del panel: comprueba que el envío llega al número configurado. No se guarda en la lista de mensajes. */
+export function plantillaPrueba(): Plantilla {
+  return {
+    tipo: "Prueba",
+    nombre: "mensaje_de_prueba",
+    parametros: [],
+    texto: "¡Hola! Este es un mensaje de prueba de Beauty Studio. Si lo estás leyendo, el envío de WhatsApp funciona correctamente.",
   };
 }

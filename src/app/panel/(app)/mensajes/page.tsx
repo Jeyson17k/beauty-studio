@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { q } from "@/lib/db";
-import { bandejaSimulada, modoWhatsApp } from "@/modulos/whatsapp/cliente";
+import { bandejaSimulada, modoWhatsApp, numeroPrueba } from "@/modulos/whatsapp/cliente";
 import { fechaHora } from "@/lib/tiempo";
 import { mostrarWhatsApp } from "@/lib/telefono";
 import { Aviso, EncabezadoPanel, Etiqueta, Vacio } from "@/componentes/ui";
@@ -28,7 +28,11 @@ export default async function Mensajes({ searchParams }: { searchParams: Promise
   return (
     <>
       {filas.some((f) => f.estado === "En cola") && <AutoRefrescar segundos={4} />}
-      <EncabezadoPanel titulo="Mensajes de WhatsApp" />
+      <EncabezadoPanel titulo="Mensajes de WhatsApp">
+        <Link href="/panel/whatsapp-prueba" className="btn-primario px-3 py-1.5 text-xs">
+          Ver teléfono de prueba
+        </Link>
+      </EncabezadoPanel>
       <div className="space-y-5 p-5 lg:p-8">
         {simulado ? (
           <Aviso tono="warn">
@@ -37,6 +41,14 @@ export default async function Mensajes({ searchParams }: { searchParams: Promise
           </Aviso>
         ) : (
           <Aviso tono="info">Modo Cloud API: los estados llegan por el webhook /api/whatsapp/webhook.</Aviso>
+        )}
+        {numeroPrueba() && (
+          <Aviso tono="info">
+            Número de prueba activo: todos los mensajes se envían a <strong>{mostrarWhatsApp(numeroPrueba()!)}</strong>, no al número de cada clienta.{" "}
+            <Link href="/panel/whatsapp-prueba" className="font-semibold underline">
+              Abrir el teléfono de prueba
+            </Link>
+          </Aviso>
         )}
         <form className="tarjeta flex flex-wrap items-end gap-3 p-4">
           <label>
@@ -114,13 +126,13 @@ export default async function Mensajes({ searchParams }: { searchParams: Promise
         {simulado && (
           <section className="tarjeta p-4">
             <h2 className="font-bold">Bandeja simulada (lo que habría llegado al teléfono de la clienta)</h2>
-            <p className="text-xs text-gris-600">Solo existe en el entorno de prueba y se borra al reiniciar el servidor. Sirve para probar el código de verificación.</p>
+            <p className="text-xs text-gris-600">Solo existe en el entorno de prueba. Sirve para probar los mensajes y el código de verificación.</p>
             <ul className="mt-3 space-y-2">
               {bandeja.length === 0 && <Vacio>Vacía.</Vacio>}
               {bandeja.map((b) => (
                 <li key={b.idExterno} className="rounded-xl bg-[#e7f6e7] p-3 text-sm">
                   <p className="text-xs text-gris-600">
-                    Para {mostrarWhatsApp(b.para)} · {b.plantilla} · {fechaHora(b.en)}
+                    Clienta {mostrarWhatsApp(b.para)} → llegó a {mostrarWhatsApp(b.destino ?? b.para)} · {b.plantilla} · {fechaHora(b.en)}
                   </p>
                   <p className="mt-1">{b.texto}</p>
                 </li>
