@@ -7,6 +7,7 @@ import { Formulario } from "@/componentes/Formulario";
 import { CamposLugar } from "@/componentes/CamposPublicos";
 import { Vacio } from "@/componentes/ui";
 import { FotoProducto } from "@/componentes/FotoProducto";
+import { EncabezadoPagina } from "@/componentes/publico";
 import { accionCambiarCantidad, accionCrearPedido } from "../acciones";
 
 export const dynamic = "force-dynamic";
@@ -18,18 +19,20 @@ export default async function Carrito() {
   if (!s) redirect("/identificarse?siguiente=/carrito");
   const { items, total } = await verCarrito(s.cid);
   return (
-    <div className="px-5 py-6">
-      <h1 className="text-2xl font-bold">Mi carrito</h1>
+    <div>
+      <EncabezadoPagina titulo="Mi carrito" volver={{ href: "/catalogo", texto: "Seguir viendo productos" }} />
+      <div className="contenedor py-8 md:py-12">
       {items.length === 0 ? (
-        <div className="mt-5 space-y-3">
+        <div className="mx-auto max-w-md space-y-3">
           <Vacio>Tu carrito está vacío.</Vacio>
           <Link href="/catalogo" className="btn-primario w-full">
             Ver productos
           </Link>
         </div>
       ) : (
-        <>
-          <ul className="mt-4 space-y-2">
+        <div className="grid gap-6 lg:grid-cols-[1.4fr_1fr] lg:items-start">
+          <div>
+          <ul className="space-y-2">
             {items.map((i) => (
               <li key={i.producto_id} className="tarjeta flex items-center gap-3 p-3">
                 <FotoProducto url={i.foto_url} nombre={i.nombre} className="h-14 w-14 rounded-lg" />
@@ -57,19 +60,21 @@ export default async function Carrito() {
               </li>
             ))}
           </ul>
-          <p className="mt-4 flex justify-between text-lg font-bold">
+          <p className="mt-4 flex justify-between rounded-2xl bg-negro-950 px-5 py-4 text-lg font-bold text-white">
             <span>Total de productos</span>
-            <span>{moneda(total)}</span>
+            <span className="text-oro-300">{moneda(total)}</span>
           </p>
-          <div className="tarjeta mt-5 p-4">
+          </div>
+          <div className="tarjeta p-5 lg:sticky lg:top-24">
             <h2 className="font-bold">Entrega</h2>
             <p className="ayuda">El pago y el costo del delivery se acuerdan con Andrea por WhatsApp; aquí no se paga nada.</p>
             <Formulario accion={accionCrearPedido} boton="Preparar pedido para WhatsApp" botonAncho className="mt-3 space-y-3">
               <CamposLugar etiquetas={["Retiro en el local", "Delivery"]} />
             </Formulario>
           </div>
-        </>
+        </div>
       )}
+      </div>
     </div>
   );
 }

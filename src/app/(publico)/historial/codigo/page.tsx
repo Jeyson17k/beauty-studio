@@ -3,6 +3,7 @@ import { Formulario } from "@/componentes/Formulario";
 import { Aviso } from "@/componentes/ui";
 import { modoWhatsApp } from "@/modulos/whatsapp/cliente";
 import { accionValidarCodigo } from "../../acciones";
+import { EncabezadoPagina } from "@/componentes/publico";
 
 export const metadata = { title: "Ingresar código" };
 
@@ -10,15 +11,15 @@ export const metadata = { title: "Ingresar código" };
 export default async function IngresarCodigo({ searchParams }: { searchParams: Promise<{ w?: string }> }) {
   const { w } = await searchParams;
   return (
-    <div className="px-5 py-6">
-      <h1 className="text-2xl font-bold">Escribe tu código</h1>
-      <p className="mt-1 text-sm text-gris-600">Si el número está registrado, te enviamos un código por WhatsApp.</p>
+    <div>
+      <EncabezadoPagina titulo="Escribe tu código" subtitulo="Si el número está registrado, te enviamos un código por WhatsApp." />
+      <div className="contenedor max-w-xl py-8 md:py-12">
       {modoWhatsApp() === "simulado" && (
-        <div className="mt-4">
+        <div className="mb-5">
           <Aviso tono="warn">Entorno de prueba: el código se ve en el panel de Andrea, en «Mensajes» → bandeja simulada.</Aviso>
         </div>
       )}
-      <div className="tarjeta mt-5 p-4">
+      <div className="tarjeta p-5 md:p-7">
         <Formulario accion={accionValidarCodigo} boton="Ver mi historial" botonAncho>
           <input type="hidden" name="whatsapp" value={w ?? ""} />
           <label className="block">
@@ -30,6 +31,7 @@ export default async function IngresarCodigo({ searchParams }: { searchParams: P
       <Link href="/historial" className="mt-4 inline-block text-sm font-semibold text-oro-700">
         Pedir otro código
       </Link>
+      </div>
     </div>
   );
 }

@@ -4,6 +4,7 @@ import { detallePedido, mensajePedido, pedido } from "@/modulos/pedidos";
 import { moneda } from "@/lib/tiempo";
 import { enlaceWhatsApp } from "@/lib/telefono";
 import { Etiqueta } from "@/componentes/ui";
+import { EncabezadoPagina } from "@/componentes/publico";
 
 export const dynamic = "force-dynamic";
 export const metadata = { title: "Pedido listo" };
@@ -16,12 +17,14 @@ export default async function PedidoListo({ params }: { params: Promise<{ id: st
   if (!p || !s || p.cliente_id !== s.cid) notFound();
   const [items, msg] = await Promise.all([detallePedido(id), mensajePedido(id)]);
   return (
-    <div className="px-5 py-6">
-      <h1 className="text-2xl font-bold">Pedido #{p.id} registrado</h1>
-      <div className="mt-2">
-        <Etiqueta texto={p.estado} tono="info" />
-      </div>
-      <ul className="tarjeta mt-4 divide-y divide-linea-200 text-sm">
+    <div>
+      <EncabezadoPagina titulo={`Pedido #${p.id} registrado`}>
+        <div className="mt-3">
+          <Etiqueta texto={p.estado} tono="info" />
+        </div>
+      </EncabezadoPagina>
+      <div className="contenedor max-w-3xl py-8 md:py-12">
+      <ul className="tarjeta divide-y divide-linea-200 text-sm">
         {items.map((i) => (
           <li key={i.producto_id} className="flex justify-between p-3">
             <span>
@@ -48,6 +51,7 @@ export default async function PedidoListo({ params }: { params: Promise<{ id: st
         </>
       )}
       <p className="mt-3 text-xs text-gris-600">Preparar o enviar el mensaje no aparta los productos.</p>
+      </div>
     </div>
   );
 }

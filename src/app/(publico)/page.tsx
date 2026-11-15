@@ -1,74 +1,205 @@
 import Link from "next/link";
 import Image from "next/image";
 import { cursosActivos, serviciosActivos } from "@/modulos/catalogo";
+import { InsigniaSeccion, PildorasNumeradas } from "@/componentes/publico";
 
 export const dynamic = "force-dynamic";
 
-// P01 Inicio
+// P01 Inicio. Estructura inspirada en el video de referencia (portada con «Conmigo podrás», áreas clave con fotos,
+// secciones numeradas y listas en píldoras), con los colores y el contenido de Beauty Studio.
 export default async function Inicio() {
   const [servicios, cursos] = await Promise.all([serviciosActivos(), cursosActivos()]);
+  const areas = [
+    { titulo: "Maquillaje", href: "/servicios", img: "/img/g_r1c1.jpg" },
+    { titulo: "Peinado", href: "/servicios", img: "/img/mood3.jpg" },
+    { titulo: "Cursos", href: "/cursos", img: "/img/g_r0c0.jpg" },
+    { titulo: "Productos", href: "/catalogo", img: "/img/mood1.jpg" },
+  ];
   return (
     <div>
-      <section className="flex items-center gap-4 bg-crema-300 px-5 py-7">
-        <div className="flex-1">
-          <h1 className="text-2xl font-bold leading-tight">Maquillaje y peinado para tu momento especial</h1>
-          <p className="mt-2 text-sm text-gris-600">Andrea Paola · Los Cedros, León</p>
-          <Link href="/solicitar/servicio" className="btn-primario mt-5 w-full sm:w-auto">
-            Solicitar cotización
-          </Link>
-        </div>
-        <Image src="/img/hero_portrait.jpg" alt="Andrea Paola" width={120} height={150} className="h-[150px] w-[110px] rounded-[60px] border-2 border-oro-200 object-cover" priority />
-      </section>
-
-      <section className="px-5 pt-6">
-        <div className="flex items-baseline justify-between">
-          <h2 className="titulo-seccion">Servicios</h2>
-          <Link href="/servicios" className="text-sm font-semibold text-oro-700">
-            Ver todos
-          </Link>
-        </div>
-        <div className="mt-3 grid grid-cols-2 gap-3">
-          {servicios.slice(0, 4).map((s) => (
-            <Link key={s.id} href={`/servicios/${s.id}`} className="tarjeta overflow-hidden">
-              {s.imagen_url && <Image src={s.imagen_url} alt={s.nombre} width={300} height={200} className="h-28 w-full object-cover" />}
-              <div className="p-3">
-                <p className="font-semibold">{s.nombre}</p>
-                <p className="mt-0.5 line-clamp-2 text-xs text-gris-600">{s.descripcion}</p>
-              </div>
-            </Link>
-          ))}
-        </div>
-      </section>
-
-      <section className="px-5 pt-6">
-        <h2 className="titulo-seccion">Cursos de maquillaje</h2>
-        <Link href="/cursos" className="tarjeta mt-3 flex items-center gap-3 p-3">
-          <Image src="/img/course_sq.jpg" alt="" width={70} height={70} className="h-[70px] w-[70px] rounded-xl object-cover" />
+      {/* ---------- Portada ---------- */}
+      <section className="relative overflow-hidden bg-negro-950 text-white">
+        <div aria-hidden className="pointer-events-none absolute -left-32 top-10 h-80 w-80 rounded-full bg-oro-400/15 blur-3xl" />
+        <div aria-hidden className="pointer-events-none absolute -right-20 bottom-0 h-96 w-96 rounded-full bg-oro-500/10 blur-3xl" />
+        <div className="contenedor relative grid items-center gap-10 py-10 md:grid-cols-[1.15fr_0.85fr] md:py-16 lg:py-20">
           <div>
-            <p className="font-semibold">Clases individuales y grupales</p>
-            <p className="text-xs text-gris-600">Sesiones de 3 horas. Mira cupos y fechas. ({cursos.length} cursos)</p>
+            <p className="text-xs font-semibold uppercase tracking-[0.3em] text-oro-300">Andrea Paola · Los Cedros, León</p>
+            <h1 className="titulo-grande mt-4 text-[2.6rem] sm:text-5xl lg:text-6xl">
+              Maquillaje y peinado <span className="texto-oro">para tu momento especial</span>
+            </h1>
+            <p className="mt-6 font-titulo text-lg uppercase tracking-[0.2em] text-white/80">Conmigo podrás:</p>
+            <ul className="mt-3 grid gap-2 sm:max-w-md">
+              {[
+                ["Solicitar", "tu cita en minutos"],
+                ["Recibir", "tu cotización por WhatsApp"],
+                ["Apartar", "tu fecha con el 10 %"],
+                ["Aprender", "con cursos de maquillaje"],
+              ].map(([v, r], i) => (
+                <li
+                  key={v}
+                  className={`pildora-flecha flex items-center gap-3 px-6 py-2.5 text-sm ${
+                    i === 0 ? "oro-degradado text-negro-950" : "bg-white/[0.08] text-white/90"
+                  }`}
+                >
+                  <span className="w-24 font-titulo text-base font-bold uppercase tracking-[0.14em]">{v}</span>
+                  <span className={i === 0 ? "font-medium" : "text-white/70"}>{r}</span>
+                </li>
+              ))}
+            </ul>
+            <div className="mt-8 flex flex-col gap-3 sm:flex-row">
+              <Link href="/solicitar/servicio" className="btn oro-degradado px-7 py-3 text-sm uppercase tracking-wider text-negro-950 hover:brightness-105">
+                Solicitar cotización
+              </Link>
+              <Link href="/disponibilidad" className="btn border border-white/25 px-7 py-3 text-sm uppercase tracking-wider text-white hover:border-oro-300 hover:text-oro-200">
+                Ver horarios ocupados
+              </Link>
+            </div>
           </div>
-        </Link>
+          <div className="relative mx-auto w-full max-w-[340px] md:max-w-none">
+            <div aria-hidden className="absolute -inset-3 rounded-[48%_48%_32px_32px] border border-oro-300/40" />
+            <div className="relative overflow-hidden rounded-[46%_46%_28px_28px] border-2 border-oro-300/70">
+              <Image src="/img/hero_portrait.jpg" alt="Andrea Paola" width={360} height={522} priority className="h-[420px] w-full object-cover md:h-[520px]" />
+              <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-negro-950/90 to-transparent p-5 pt-16">
+                <p className="font-titulo text-xl font-semibold uppercase tracking-[0.14em]">Agenda abierta</p>
+                <p className="text-sm text-white/70">Graduaciones, bodas, sesiones de fotos y eventos</p>
+              </div>
+            </div>
+          </div>
+        </div>
       </section>
 
-      <section className="px-5 pt-6">
-        <h2 className="titulo-seccion">¿Cómo funciona?</h2>
-        <ol className="mt-3 space-y-2 text-sm">
-          {[
-            "Envías tu solicitud con la fecha, la hora y, si quieres, fotos de referencia.",
-            "Andrea la revisa y te envía la cotización por WhatsApp.",
-            "Pagas el anticipo del 10 % dentro de 24 horas y le envías el comprobante por WhatsApp.",
-            "Andrea verifica el pago y confirma tu cita. El saldo se paga el día de la atención.",
-          ].map((t, i) => (
-            <li key={i} className="flex gap-3">
-              <span className="grid h-6 w-6 shrink-0 place-items-center rounded-full bg-negro-900 text-xs font-bold text-oro-300">{i + 1}</span>
-              <span>{t}</span>
-            </li>
-          ))}
-        </ol>
-        <Link href="/disponibilidad" className="btn-borde mt-5 w-full">
-          Ver horarios ocupados
-        </Link>
+      {/* ---------- Áreas clave ---------- */}
+      <section className="bg-negro-900 py-12 text-white md:py-16">
+        <div className="contenedor">
+          <div className="flex items-end gap-4">
+            <span className="texto-oro font-titulo text-7xl font-bold leading-none md:text-8xl">4</span>
+            <div>
+              <h2 className="titulo-grande text-2xl md:text-4xl">Formas de consentirte</h2>
+              <p className="font-titulo text-sm uppercase tracking-[0.2em] text-oro-300">Todo en un solo lugar</p>
+            </div>
+          </div>
+          <div className="mt-8 grid grid-cols-2 gap-3 md:grid-cols-4 md:gap-5">
+            {areas.map((a) => (
+              <Link key={a.titulo} href={a.href} className="group relative block overflow-hidden rounded-2xl">
+                <Image src={a.img} alt="" width={300} height={400} className="h-48 w-full object-cover transition duration-500 group-hover:scale-105 md:h-72" />
+                <div className="absolute inset-0 bg-gradient-to-t from-negro-950/85 via-negro-950/10 to-transparent" />
+                <span className="cinta oro-degradado absolute bottom-4 left-0 py-1.5 pl-4 pr-7 font-titulo text-sm font-semibold uppercase tracking-[0.16em] text-negro-950 md:text-base">
+                  {a.titulo}
+                </span>
+              </Link>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ---------- 1. Servicios ---------- */}
+      <section className="bg-crema-50 py-12 md:py-16">
+        <div className="contenedor">
+          <div className="flex flex-wrap items-center justify-between gap-4">
+            <InsigniaSeccion numero={1} titulo="Servicios de belleza" claro />
+            <Link href="/servicios" className="text-sm font-semibold text-oro-700 hover:underline">
+              Ver todos →
+            </Link>
+          </div>
+          <div className="mt-8 grid grid-cols-2 gap-3 md:gap-4 lg:grid-cols-4">
+            {servicios.slice(0, 4).map((s) => (
+              <Link key={s.id} href={`/servicios/${s.id}`} className="group tarjeta overflow-hidden transition hover:-translate-y-1 hover:shadow-lg">
+                {s.imagen_url && <Image src={s.imagen_url} alt={s.nombre} width={444} height={312} className="h-32 w-full object-cover md:h-44" />}
+                <div className="p-3 md:p-4">
+                  <p className="font-titulo text-base font-semibold uppercase tracking-wide md:text-lg">{s.nombre}</p>
+                  <p className="mt-1 line-clamp-2 text-xs text-gris-600 md:text-sm">{s.descripcion}</p>
+                  <p className="mt-3 text-sm font-semibold text-oro-700 group-hover:underline">Solicitar →</p>
+                </div>
+              </Link>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ---------- 2. Cursos ---------- */}
+      <section className="bg-negro-950 py-12 text-white md:py-16">
+        <div className="contenedor grid items-center gap-10 md:grid-cols-2">
+          <div>
+            <InsigniaSeccion numero={2} titulo="Cursos de maquillaje" />
+            <h2 className="titulo-grande mt-6 text-3xl md:text-4xl">
+              Aprende con <span className="texto-oro">Andrea</span>
+            </h2>
+            <p className="mt-3 text-sm text-white/70">Sesiones de 3 horas. En las clases grupales cada participante se inscribe y paga por separado.</p>
+            <div className="mt-6">
+              <PildorasNumeradas
+                items={
+                  cursos.length
+                    ? cursos.slice(0, 4).map((c) => (
+                        <span key={c.id}>
+                          {c.nombre} <span className="opacity-60">· {c.modalidad === "grupal" ? "grupal" : "individual"}</span>
+                        </span>
+                      ))
+                    : ["Pronto abriremos nuevos cursos"]
+                }
+              />
+            </div>
+            <Link href="/cursos" className="btn oro-degradado mt-7 px-7 py-3 text-sm uppercase tracking-wider text-negro-950">
+              Ver cursos y cupos
+            </Link>
+          </div>
+          <div className="relative">
+            <div className="rounded-3xl border border-white/10 bg-negro-800/60 p-3 shadow-2xl">
+              <div className="grid grid-cols-2 gap-3">
+                <Image src="/img/g_r2c1.jpg" alt="" width={246} height={328} className="h-56 w-full rounded-2xl object-cover md:h-72" />
+                <Image src="/img/g_r3c1.jpg" alt="" width={246} height={330} className="mt-8 h-56 w-full rounded-2xl object-cover md:h-72" />
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ---------- 3. Cómo funciona ---------- */}
+      <section className="bg-crema-100 py-12 md:py-16">
+        <div className="contenedor grid gap-10 md:grid-cols-[1fr_0.8fr] md:items-center">
+          <div>
+            <InsigniaSeccion numero={3} titulo="¿Cómo funciona?" claro />
+            <div className="mt-8">
+              <PildorasNumeradas
+                oscuro={false}
+                items={[
+                  "Envías tu solicitud con la fecha, la hora y, si quieres, fotos de referencia.",
+                  "Andrea la revisa y te envía la cotización por WhatsApp.",
+                  "Pagas el anticipo del 10 % dentro de 24 horas y envías el comprobante por WhatsApp.",
+                  "Andrea verifica el pago y confirma tu cita. El saldo se paga el día de la atención.",
+                ]}
+              />
+            </div>
+          </div>
+          <div className="tarjeta overflow-hidden">
+            <Image src="/img/andrea_wide.jpg" alt="Andrea Paola" width={900} height={600} className="h-52 w-full object-cover" />
+            <div className="p-5">
+              <p className="font-titulo text-xl font-semibold uppercase tracking-wide">Revisa la agenda</p>
+              <p className="mt-1 text-sm text-gris-600">Mira qué horarios ya están apartados o confirmados antes de elegir tu fecha.</p>
+              <div className="mt-4 flex flex-col gap-2 sm:flex-row">
+                <Link href="/disponibilidad" className="btn-primario flex-1">
+                  Ver disponibilidad
+                </Link>
+                <Link href="/solicitar/servicio" className="btn-borde flex-1">
+                  Solicitar
+                </Link>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ---------- 4. Catálogo ---------- */}
+      <section className="relative overflow-hidden bg-negro-950 text-white">
+        <Image src="/img/banner.jpg" alt="" fill className="object-cover opacity-30" />
+        <div className="absolute inset-0 bg-gradient-to-r from-negro-950 via-negro-950/80 to-transparent" />
+        <div className="contenedor relative py-14 md:py-20">
+          <InsigniaSeccion numero={4} titulo="Productos de belleza" />
+          <h2 className="titulo-grande mt-6 max-w-xl text-3xl md:text-4xl">Lo que Andrea usa, ahora para ti</h2>
+          <p className="mt-3 max-w-md text-sm text-white/70">Arma tu pedido y envíaselo por WhatsApp. Retiro en el local o delivery.</p>
+          <Link href="/catalogo" className="btn oro-degradado mt-7 px-7 py-3 text-sm uppercase tracking-wider text-negro-950">
+            Ver catálogo
+          </Link>
+        </div>
       </section>
     </div>
   );

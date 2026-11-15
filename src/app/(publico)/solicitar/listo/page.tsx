@@ -20,9 +20,9 @@ export default async function Listo({ searchParams }: { searchParams: Promise<{ 
         )
       : null;
   return (
-    <div className="px-5 py-8 text-center">
-      <div className="mx-auto grid h-16 w-16 place-items-center rounded-full bg-ok-100 text-3xl text-ok-700">✓</div>
-      <h1 className="mt-4 text-2xl font-bold">¡Solicitud enviada!</h1>
+    <div className="contenedor py-12 text-center md:py-16">
+      <div className="hexagono oro-degradado mx-auto grid h-20 w-24 place-items-center text-4xl text-negro-950">✓</div>
+      <h1 className="titulo-grande mt-5 text-3xl md:text-4xl">¡Solicitud enviada!</h1>
       {s && (
         <div className="tarjeta mx-auto mt-5 max-w-sm p-4 text-left text-sm">
           <p className="font-semibold">
@@ -38,7 +38,7 @@ export default async function Listo({ searchParams }: { searchParams: Promise<{ 
         Andrea revisará tu solicitud y te enviará la cotización por WhatsApp. Tu horario todavía no está apartado: se aparta cuando recibes la cotización y se
         confirma cuando Andrea verifica tu anticipo.
       </p>
-      <div className="mt-6 flex flex-col gap-2">
+      <div className="mx-auto mt-6 flex max-w-sm flex-col gap-2 sm:max-w-md sm:flex-row sm:justify-center">
         <Link href="/historial" className="btn-borde">
           Ver mi historial
         </Link>

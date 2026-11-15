@@ -5,6 +5,7 @@ import { fechaHora, moneda } from "@/lib/tiempo";
 import { mostrarWhatsApp } from "@/lib/telefono";
 import { Etiqueta, Vacio } from "@/componentes/ui";
 import { accionCerrarHistorial } from "../../acciones";
+import { EncabezadoPagina } from "@/componentes/publico";
 
 export const dynamic = "force-dynamic";
 export const metadata = { title: "Mi historial" };
@@ -15,20 +16,19 @@ export default async function MiHistorial() {
   if (!s) redirect("/historial");
   const [cli, filas] = await Promise.all([clientaPorId(s.cid), historial(s.cid)]);
   return (
-    <div className="px-5 py-6">
-      <div className="flex items-start justify-between gap-3">
-        <div>
-          <h1 className="text-2xl font-bold">Mi historial</h1>
-          <p className="text-sm text-gris-600">
-            {cli?.nombre} · {mostrarWhatsApp(s.whatsapp)}
-          </p>
-        </div>
-        <form action={accionCerrarHistorial}>
-          <button className="btn-borde px-3 py-1.5 text-xs">Salir</button>
+    <div>
+      <EncabezadoPagina titulo="Mi historial" subtitulo={`${cli?.nombre ?? ""} · ${mostrarWhatsApp(s.whatsapp)}`}>
+        <form action={accionCerrarHistorial} className="mt-4">
+          <button className="btn border border-white/25 px-4 py-1.5 text-xs text-white hover:border-oro-300">Salir</button>
         </form>
-      </div>
-      <div className="mt-5 space-y-3">
-        {filas.length === 0 && <Vacio>Todavía no tienes solicitudes.</Vacio>}
+      </EncabezadoPagina>
+      <div className="contenedor max-w-4xl py-8 md:py-12">
+      <div className="grid gap-3 md:grid-cols-2">
+        {filas.length === 0 && (
+          <div className="md:col-span-2">
+            <Vacio>Todavía no tienes solicitudes.</Vacio>
+          </div>
+        )}
         {filas.map((f) => (
           <article key={f.id} className="tarjeta p-4">
             <div className="flex items-start justify-between gap-2">
@@ -61,6 +61,7 @@ export default async function MiHistorial() {
         ))}
       </div>
       <p className="mt-5 text-xs text-gris-600">Para cambios o dudas escribe a Andrea por WhatsApp. La sesión se cierra sola después de 15 minutos.</p>
+      </div>
     </div>
   );
 }

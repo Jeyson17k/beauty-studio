@@ -1,47 +1,63 @@
 import Link from "next/link";
-import { Logo } from "@/componentes/ui";
-import { sesionClienta } from "@/lib/sesion";
+import { LogoPublico, PiePublico } from "@/componentes/publico";
+import { NavEscritorio, NavMovil } from "@/componentes/NavPublica";
+import { sesionClienta, sesionPerfilClienta } from "@/lib/sesion";
 import { mostrarWhatsApp } from "@/lib/telefono";
+import { leerConfig } from "@/lib/config";
 import { accionOlvidarme } from "./acciones";
 
-// Interfaz pública mobile-first (RNF-01), páginas P01 a P13.
+// Interfaz pública P01 a P18: se adapta al teléfono (barra inferior) y a la computadora (barra superior) (RNF-01).
 export default async function LayoutPublico({ children }: { children: React.ReactNode }) {
-  const clienta = await sesionClienta();
+  const [clienta, config, perfil] = await Promise.all([sesionClienta(), leerConfig(), sesionPerfilClienta()]);
   return (
-    <div className="mx-auto flex min-h-dvh max-w-[560px] flex-col bg-crema-50 shadow-sm">
-      <header className="sticky top-0 z-20 flex items-center justify-between border-b border-linea-200 bg-white/95 px-4 py-3 backdrop-blur">
-        <Link href="/" aria-label="Inicio">
-          <Logo />
-        </Link>
-        <Link href="/solicitar/servicio" className="btn-primario px-4 py-2 text-xs">
-          Solicitar
-        </Link>
-      </header>
-      {clienta && (
-        // RN-01.3: nombre y WhatsApp visibles durante el uso
-        <div className="flex items-center justify-between gap-2 bg-crema-300 px-4 py-2 text-xs text-texto-900">
-          <span>
-            <strong>{clienta.nombre}</strong> · {mostrarWhatsApp(clienta.whatsapp)}
-          </span>
-          <form action={accionOlvidarme}>
-            <button className="font-semibold text-oro-700 hover:underline">No soy yo</button>
-          </form>
+    <div className="flex min-h-dvh flex-col bg-crema-50">
+      {perfil && (
+        // Andrea viendo la página como clienta: para volver al panel se pide la contraseña
+        <div className="bg-oro-200 text-negro-950">
+          <div className="contenedor flex flex-wrap items-center justify-between gap-2 py-1.5 text-xs">
+            <span>
+              Estás viendo la página como <strong>clienta</strong> ({perfil.usuario}).
+            </span>
+            <Link href="/cambiar-perfil?a=admin" className="font-bold underline">
+              Cambiar a perfil de administradora
+            </Link>
+          </div>
         </div>
       )}
-      <main className="flex-1 pb-24">{children}</main>
-      <nav className="fixed bottom-0 left-1/2 z-20 grid w-full max-w-[560px] -translate-x-1/2 grid-cols-5 border-t border-linea-200 bg-white text-center text-[13px]">
-        {[
-          ["/", "Inicio"],
-          ["/servicios", "Servicios"],
-          ["/cursos", "Cursos"],
-          ["/catalogo", "Catálogo"],
-          ["/historial", "Historial"],
-        ].map(([href, t]) => (
-          <Link key={href} href={href} className="py-3.5 text-[12px] font-medium sm:text-[13px] text-gris-600 hover:text-oro-700">
-            {t}
+      <header className="sticky top-0 z-30 border-b border-white/10 bg-negro-950/95 backdrop-blur">
+        <div className="contenedor flex items-center justify-between gap-4 py-3">
+          <Link href="/" aria-label="Inicio">
+            <LogoPublico />
           </Link>
-        ))}
-      </nav>
+          <NavEscritorio />
+          <div className="flex items-center gap-2">
+            <Link href="/carrito" className="hidden rounded-full px-3 py-2 text-sm text-white/70 hover:text-oro-200 sm:inline-block">
+              Carrito
+            </Link>
+            <Link href="/solicitar/servicio" className="btn oro-degradado px-4 py-2 text-xs uppercase tracking-wider text-negro-950 hover:brightness-105 md:px-5">
+              Solicitar cita
+            </Link>
+          </div>
+        </div>
+        {clienta && (
+          // RN-01.3: nombre y WhatsApp visibles durante el uso
+          <div className="border-t border-white/10 bg-negro-800">
+            <div className="contenedor flex items-center justify-between gap-2 py-1.5 text-xs text-white/80">
+              <span>
+                Hola, <strong className="text-oro-200">{clienta.nombre}</strong> · {mostrarWhatsApp(clienta.whatsapp)}
+              </span>
+              <form action={accionOlvidarme}>
+                <button className="font-semibold text-oro-300 hover:underline">No soy yo</button>
+              </form>
+            </div>
+          </div>
+        )}
+      </header>
+      <main className="flex-1">{children}</main>
+      <div className="pb-[72px] lg:pb-0">
+        <PiePublico whatsapp={config.whatsapp_negocio} />
+      </div>
+      <NavMovil />
     </div>
   );
 }
