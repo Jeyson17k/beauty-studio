@@ -7,6 +7,7 @@ import { leerConfig } from "@/lib/config";
 import { moneda } from "@/lib/tiempo";
 import { auditar, notificar } from "./seguridad";
 import { salidaPorVenta } from "./inventario";
+import { identificar } from "./clientas";
 
 export type ItemCarrito = { producto_id: number; nombre: string; precio_venta: number; cantidad: number; subtotal: number; foto_url: string | null; disponible: boolean };
 
@@ -68,6 +69,25 @@ export async function crearPedido(clienteId: string, d: { entrega: "delivery" | 
     await auditar(c, null, "Registrar pedido web", "pedido", p!.id, moneda(total));
     return p!.id;
   });
+}
+
+/**
+ * Pedido registrado por Andrea a nombre de una clienta que no puede usar la página (por WhatsApp o en persona).
+ * Sigue las mismas reglas que un pedido de la web: no aparta inventario hasta que Andrea lo confirme (RN-22.7).
+ */
+export async function pedidoPorAndrea(
+  uid: number,
+  d: { nombre: string; whatsapp: string; acepta: boolean; lineas: { productoId: number; cantidad: number }[]; entrega: "delivery" | "retiro"; direccion?: string; referencia?: string },
+) {
+  const lineas = d.lineas.filter((l) => l.productoId && l.cantidad > 0);
+  if (lineas.length === 0) throw new ReglaError("Elige al menos un producto.");
+  const cli = await identificar(d.nombre, d.whatsapp, d.acepta);
+  // El carrito de la clienta se arma de cero con lo que Andrea registró.
+  await q("DELETE FROM item_carrito WHERE carrito_id IN (SELECT id FROM carrito WHERE cliente_id = $1)", [cli.id]);
+  for (const l of lineas) await cambiarCarrito(cli.id, l.productoId, l.cantidad);
+  const id = await crearPedido(cli.id, { entrega: d.entrega, direccion: d.direccion, referencia: d.referencia });
+  await auditar(pool, uid, "Registrar pedido a nombre de una clienta", "pedido", id);
+  return id;
 }
 
 export type Pedido = {

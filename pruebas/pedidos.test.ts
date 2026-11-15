@@ -1,7 +1,7 @@
 // Pruebas de catálogo, carrito, pedidos, inventario, ventas, gastos y reportes (RF-20 a RF-30).
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { q, q1, pool } from "@/lib/db";
-import { cambiarCarrito, cambiarEntrega, cancelarPedido, confirmarYReservar, crearPedido, registrarPagoPedido, vencerReservasPedidos, verCarrito } from "@/modulos/pedidos";
+import { cambiarCarrito, cambiarEntrega, cancelarPedido, confirmarYReservar, crearPedido, pedidoPorAndrea, registrarPagoPedido, vencerReservasPedidos, verCarrito } from "@/modulos/pedidos";
 import { catalogoPublico, guardarProducto, registrarAjuste, registrarEntrada, registrarGasto, registrarVentaDirecta } from "@/modulos/inventario";
 import { reporte } from "@/modulos/reportes";
 import { clienta, reiniciarBase, UID } from "./utilidades";
@@ -141,5 +141,21 @@ describe("Inventario, ventas, gastos y reportes (RF-26 a RF-30)", () => {
     expect(r.gastos_operativos).toBe(100);
     expect(r.resultado).toBe(1300 + 300 - 320 - 200 - 100);
     expect(r.masVendidos[0]).toMatchObject({ nombre: "Base líquida", unidades: 2 });
+  });
+
+  it("PF-54 · Andrea registra un pedido a nombre de una clienta: queda pendiente, sin apartar inventario y con auditoría", async () => {
+    const antes = await stock(base);
+    const id = await pedidoPorAndrea(UID, {
+      nombre: "Clienta Sin Web", whatsapp: "8855 1234", acepta: true, entrega: "retiro",
+      lineas: [{ productoId: base, cantidad: 2 }, { productoId: poco, cantidad: 0 }],
+    });
+    const p = (await q1<{ estado: string; subtotal_productos: number; cliente_id: string }>("SELECT estado, subtotal_productos, cliente_id FROM pedido WHERE id = $1", [id]))!;
+    expect(p.estado).toBe("Pendiente de confirmación");
+    expect(p.subtotal_productos).toBe(1300);
+    expect(await stock(base)).toEqual(antes);
+    expect((await q("SELECT 1 FROM detalle_pedido WHERE pedido_id = $1", [id])).length).toBe(1);
+    expect((await q1<{ n: number }>("SELECT count(*)::int AS n FROM auditoria WHERE accion = 'Registrar pedido a nombre de una clienta' AND entidad_id = $1", [id]))!.n).toBe(1);
+    await expect(pedidoPorAndrea(UID, { nombre: "Clienta Sin Web", whatsapp: "8855 1234", acepta: true, entrega: "retiro", lineas: [{ productoId: base, cantidad: 0 }] })).rejects.toThrow(/al menos un producto/);
+    await expect(pedidoPorAndrea(UID, { nombre: "Clienta Sin Web", whatsapp: "8855 1234", acepta: true, entrega: "delivery", lineas: [{ productoId: base, cantidad: 1 }] })).rejects.toThrow(/dirección/);
   });
 });

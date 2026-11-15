@@ -12,7 +12,11 @@ export default async function Pedidos({ searchParams }: { searchParams: Promise<
   const filas = await listarPedidos(sp.estado);
   return (
     <>
-      <EncabezadoPanel titulo="Pedidos" />
+      <EncabezadoPanel titulo="Pedidos">
+        <Link href="/panel/pedidos/nuevo" className="btn-primario">
+          + Pedido por una clienta
+        </Link>
+      </EncabezadoPanel>
       <div className="space-y-4 p-5 lg:p-8">
         <div className="flex flex-wrap gap-2 text-sm">
           {["", "Pendiente de confirmación", "Reservado", "Cerrado", "Cancelado", "Expirado"].map((e) => (
