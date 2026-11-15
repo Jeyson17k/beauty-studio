@@ -4,16 +4,16 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { aResultado, ReglaError } from "@/lib/errores";
 import { desdeLocal, fechaHora, moneda } from "@/lib/tiempo";
-import { abrirSesionAdmin, cerrarSesionAdmin, sesionAdmin } from "@/lib/sesion";
+import { abrirSesionAdmin, cerrarPerfilClienta, cerrarSesionAdmin, sesionAdmin } from "@/lib/sesion";
 import { q, pool } from "@/lib/db";
 import { CONFIG_INICIAL, ClaveConfig } from "@/lib/config";
-import { auditar, cambiarPassword, marcarLeidas, validarCredenciales } from "@/modulos/seguridad";
+import { auditar, marcarLeidas, validarCredenciales } from "@/modulos/seguridad";
 import { guardarCotizacion, rechazarOCancelar, registroDirecto, reprogramar, rechazarReprogramacion } from "@/modulos/solicitudes";
 import { enviarAvisoConfirmacion, enviarCotizacion, registrarAvisoManual, registrarEnvioManual } from "@/modulos/whatsapp/servicio";
 import { cargarComprobante, declararExpiracion, rechazarComprobante, registrarAtencion, registrarSaldo, validarAnticipoYConfirmar } from "@/modulos/pagos";
 import { cancelarSesion, guardarCurso, guardarServicio, habilitarSesion, marcarSesionRealizada, programarSesion } from "@/modulos/catalogo";
 import { ejecutarTareas } from "@/modulos/planificador";
-import { cambiarEntrega, cancelarPedido, confirmarYReservar, registrarPagoPedido } from "@/modulos/pedidos";
+import { cambiarEntrega, cancelarPedido, confirmarYReservar, pedidoPorAndrea, registrarPagoPedido } from "@/modulos/pedidos";
 import { eliminarGasto, guardarProducto, registrarAjuste, registrarEntrada, registrarGasto, registrarVentaDirecta } from "@/modulos/inventario";
 import type { EstadoForm } from "@/componentes/Formulario";
 
@@ -47,6 +47,7 @@ export async function accionLogin(_: EstadoForm, fd: FormData): Promise<EstadoFo
     return { ok: false, error: "Usuario o contraseña incorrectos." };
   }
   await abrirSesionAdmin(s);
+  await cerrarPerfilClienta();
   await auditar(pool, s.uid, "Iniciar sesión", "usuario_admin", s.uid);
   const sig = txt(fd, "siguiente");
   redirect(sig.startsWith("/panel") ? sig : "/panel");
@@ -54,18 +55,8 @@ export async function accionLogin(_: EstadoForm, fd: FormData): Promise<EstadoFo
 
 export async function accionLogout() {
   await cerrarSesionAdmin();
+  await cerrarPerfilClienta();
   redirect("/panel/login");
-}
-
-export async function accionCambiarPassword(_: EstadoForm, fd: FormData) {
-  return ejecutar(async () => {
-    const id = await uid();
-    const nueva = String(fd.get("nueva") ?? "");
-    if (nueva.length < 10) throw new ReglaError("La contraseña debe tener al menos 10 caracteres.");
-    if (nueva !== String(fd.get("repetir") ?? "")) throw new ReglaError("Las contraseñas no coinciden.");
-    await cambiarPassword(id, nueva);
-    return "Contraseña actualizada.";
-  });
 }
 
 // ---------- A05 Cotizar (CU-12) ----------
@@ -166,6 +157,24 @@ export async function accionRegistroDirecto(_: EstadoForm, fd: FormData): Promis
   }
   revalidatePath("/panel", "layout");
   redirect(`/panel/solicitudes/${id}`);
+}
+
+// ---------- Pedido registrado por Andrea a nombre de una clienta ----------
+export async function accionPedidoPorClienta(_: EstadoForm, fd: FormData): Promise<EstadoForm> {
+  let id: number;
+  try {
+    const ids = fd.getAll("producto_id").map(Number);
+    const cantidades = fd.getAll("cantidad").map(Number);
+    id = await pedidoPorAndrea(await uid(), {
+      nombre: txt(fd, "nombre"), whatsapp: txt(fd, "whatsapp"), acepta: fd.get("acepta") === "on",
+      lineas: ids.map((productoId, i) => ({ productoId, cantidad: Number.isInteger(cantidades[i]) ? cantidades[i] : 0 })),
+      entrega: txt(fd, "lugar") === "domicilio" ? "delivery" : "retiro", direccion: txt(fd, "direccion"), referencia: txt(fd, "referencia"),
+    });
+  } catch (e) {
+    return aResultado(e);
+  }
+  revalidatePath("/panel", "layout");
+  redirect(`/panel/pedidos/${id}`);
 }
 
 // ---------- A12 Reprogramar (CU-28) ----------

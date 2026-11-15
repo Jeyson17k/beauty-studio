@@ -9,6 +9,7 @@ export const dynamic = "force-dynamic";
 
 const MENU = [
   ["/panel", "Panel de inicio"],
+  ["/panel/registrar", "Registrar por una clienta"],
   ["/panel/solicitudes", "Solicitudes"],
   ["/panel/agenda", "Agenda"],
   ["/panel/pedidos", "Pedidos"],
@@ -17,9 +18,11 @@ const MENU = [
   ["/panel/gastos", "Gastos"],
   ["/panel/reportes", "Reportes"],
   ["/panel/mensajes", "Mensajes de WhatsApp"],
+  ["/panel/whatsapp-prueba", "Teléfono de prueba"],
   ["/panel/servicios", "Servicios"],
   ["/panel/cursos", "Cursos y sesiones"],
   ["/panel/configuracion", "Configuración"],
+  ["/cambiar-perfil?a=clienta", "Cambiar a perfil de clienta"],
 ];
 
 // Panel de Andrea (A02 a A16). Las rutas están protegidas por el middleware y aquí se vuelve a comprobar la sesión.
