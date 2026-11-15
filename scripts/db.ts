@@ -1,5 +1,5 @@
 // Uso:
-//   npm run db:crear      → crea las 30 tablas del modelo físico (db/schema.sql)
+//   npm run db:crear      → crea las 31 tablas del modelo físico (db/schema.sql)
 //   npm run db:semilla    → carga los datos iniciales (Andrea, servicios, cursos, configuración)
 //   npm run db:reiniciar  → BORRA todo, vuelve a crear las tablas y carga los datos iniciales (solo en pruebas)
 import { readFileSync } from "fs";
@@ -24,7 +24,12 @@ function cargarEnv() {
 async function crear(c: Client) {
   const sql = readFileSync(path.resolve("db/schema.sql"), "utf8");
   await c.query(sql);
-  console.log("✔ Tablas creadas (30).");
+  console.log("✔ Tablas creadas (31).");
+}
+
+async function migrar(c: Client) {
+  await c.query(readFileSync(path.resolve("db/migraciones.sql"), "utf8"));
+  console.log("✔ Cambios del modelo aplicados (correo de recuperación y códigos por correo).");
 }
 
 async function semilla(c: Client) {
@@ -34,6 +39,9 @@ async function semilla(c: Client) {
      ON CONFLICT (usuario) DO NOTHING`,
     [await bcrypt.hash(pass, 10)],
   );
+  // Correo de recuperación (opcional): ADMIN_EMAIL. Andrea también puede registrarlo desde Configuración.
+  const correo = (process.env.ADMIN_EMAIL || "").trim().toLowerCase();
+  if (correo) await c.query("UPDATE usuario_admin SET correo = $1 WHERE usuario = 'andrea' AND correo IS NULL", [correo]);
   for (const [clave, v] of Object.entries(CONFIG_INICIAL)) {
     await c.query("INSERT INTO configuracion (clave, valor, descripcion) VALUES ($1,$2,$3) ON CONFLICT (clave) DO NOTHING", [clave, v.valor, v.descripcion]);
   }
@@ -71,8 +79,10 @@ async function main() {
       await semilla(c);
     } else if (accion === "crear") {
       const existe = await c.query("SELECT to_regclass('public.solicitud_actividad') AS t");
-      if (existe.rows[0].t) console.log("Las tablas ya existen; no se modificaron. Usa db:reiniciar para empezar de cero.");
-      else await crear(c);
+      if (existe.rows[0].t) {
+        console.log("Las tablas ya existen; sus datos no se tocan. Usa db:reiniciar para empezar de cero.");
+        await migrar(c);
+      } else await crear(c);
     } else if (accion === "semilla") await semilla(c);
     else console.log("Acciones: crear | semilla | reiniciar");
   } finally {
