@@ -21,7 +21,7 @@ export default async function Servicios() {
           <Link key={s.id} href={`/servicios/${s.id}`} className="group tarjeta flex flex-col overflow-hidden transition hover:-translate-y-1 hover:shadow-lg">
             {s.imagen_url && (
               <div className="relative">
-                <Image src={s.imagen_url} alt="" width={444} height={312} className="h-52 w-full object-cover" />
+                <Image src={s.imagen_url} alt="" width={800} height={800} className="aspect-square w-full object-cover" />
                 <span className="cinta oro-degradado absolute bottom-3 left-0 py-1 pl-3 pr-6 text-xs font-semibold text-negro-950">
                   {s.precio_base ? `Desde ${moneda(s.precio_base)}` : "Precio según cotización"}
                 </span>

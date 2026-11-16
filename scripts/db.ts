@@ -46,13 +46,23 @@ async function semilla(c: Client) {
     await c.query("INSERT INTO configuracion (clave, valor, descripcion) VALUES ($1,$2,$3) ON CONFLICT (clave) DO NOTHING", [clave, v.valor, v.descripcion]);
   }
   const servicios = [
-    ["Maquillaje social", "Piel, ojos y labios para eventos de día o de noche.", "/img/svc_makeup.jpg"],
-    ["Maquillaje de novia", "Maquillaje de larga duración para el día de tu boda, con prueba previa.", "/img/svc_makeup2.jpg"],
-    ["Peinado", "Recogidos, ondas y semirrecogidos.", "/img/svc_hair.jpg"],
-    ["Maquillaje y peinado", "Combinación de maquillaje social y peinado.", "/img/svc_hair2.jpg"],
+    ["Maquillaje social", "Piel, ojos y labios para eventos de día o de noche.", "/img/svc_social.jpg"],
+    ["Maquillaje de novia", "Maquillaje de larga duración para el día de tu boda, con prueba previa.", "/img/svc_novia.jpg"],
+    ["Peinado", "Recogidos, ondas y semirrecogidos.", "/img/svc_peinado.jpg"],
+    ["Maquillaje y peinado", "Combinación de maquillaje social y peinado.", "/img/svc_combo.jpg"],
   ];
   for (const [nombre, descripcion, img] of servicios) {
     await c.query("INSERT INTO servicio (nombre, descripcion, precio_base, imagen_url, activo) VALUES ($1,$2,NULL,$3,true) ON CONFLICT (nombre) DO NOTHING", [nombre, descripcion, img]);
+  }
+  // Fotos nuevas: solo reemplaza la foto original de fábrica; si Andrea ya puso otra, no se toca.
+  const cambiosFoto = [
+    ["Maquillaje social", "/img/svc_makeup.jpg", "/img/svc_social.jpg"],
+    ["Maquillaje de novia", "/img/svc_makeup2.jpg", "/img/svc_novia.jpg"],
+    ["Peinado", "/img/svc_hair.jpg", "/img/svc_peinado.jpg"],
+    ["Maquillaje y peinado", "/img/svc_hair2.jpg", "/img/svc_combo.jpg"],
+  ];
+  for (const [nombre, vieja, nueva] of cambiosFoto) {
+    await c.query("UPDATE servicio SET imagen_url = $3 WHERE nombre = $1 AND imagen_url = $2", [nombre, vieja, nueva]);
   }
   await c.query(
     `INSERT INTO curso (nombre, descripcion, modalidad, duracion_min, precio_base, activo) VALUES

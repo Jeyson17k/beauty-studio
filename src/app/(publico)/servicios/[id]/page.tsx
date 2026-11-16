@@ -16,7 +16,7 @@ export default async function DetalleServicio({ params }: { params: Promise<{ id
       <div className="contenedor grid gap-8 py-8 md:grid-cols-2 md:items-center md:py-14">
         {s.imagen_url && (
           <div className="overflow-hidden rounded-3xl border border-oro-300/40">
-            <Image src={s.imagen_url} alt={s.nombre} width={888} height={624} className="h-64 w-full object-cover md:h-[440px]" priority />
+            <Image src={s.imagen_url} alt={s.nombre} width={800} height={800} className="aspect-square w-full object-cover md:max-h-[520px]" priority />
           </div>
         )}
         <div>
