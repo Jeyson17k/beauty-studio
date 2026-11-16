@@ -4,6 +4,8 @@ import { q } from "@/lib/db";
 import { detalleSolicitud } from "@/modulos/solicitudes";
 import { eventosDeMensaje, mensajesDeSolicitud, vistaPreviaConfirmacion, vistaPreviaCotizacion } from "@/modulos/whatsapp/servicio";
 import { sesionesAbiertas } from "@/modulos/catalogo";
+import { datosCalendario } from "@/modulos/agenda";
+import { SelectorCalendario } from "@/componentes/SelectorCalendario";
 import { saldoPendiente } from "@/modulos/pagos";
 import { SOL } from "@/modulos/estados";
 import { aLocal, fechaHora, hora, minimoLocal, moneda } from "@/lib/tiempo";
@@ -36,7 +38,7 @@ export default async function DetalleSolicitud({ params }: { params: Promise<{ i
   const id = Number((await params).id);
   const s = await detalleSolicitud(id);
   if (!s) notFound();
-  const [mensajes, previa, previaAviso, saldo, sesiones, bitacora] = await Promise.all([
+  const [mensajes, previa, previaAviso, saldo, sesiones, bitacora, casillas] = await Promise.all([
     mensajesDeSolicitud(id),
     vistaPreviaCotizacion(id),
     s.estado === SOL.CONFIRMADA ? vistaPreviaConfirmacion(id) : Promise.resolve(null),
@@ -46,6 +48,7 @@ export default async function DetalleSolicitud({ params }: { params: Promise<{ i
       "SELECT a.accion, a.detalle, a.marca_tiempo, u.usuario FROM auditoria a LEFT JOIN usuario_admin u ON u.id = a.usuario_id WHERE a.entidad = 'solicitud_actividad' AND a.entidad_id = $1 ORDER BY a.marca_tiempo",
       [id],
     ),
+    s.estado === SOL.CONFIRMADA && s.modalidad !== "grupal" ? datosCalendario(true) : Promise.resolve([]),
   ]);
   const eventos = Object.fromEntries(await Promise.all(mensajes.map(async (m) => [m.id, await eventosDeMensaje(m.id)] as const)));
   const ultimaCot = mensajes.filter((m) => m.tipo === "Cotización").at(-1);
@@ -315,10 +318,10 @@ export default async function DetalleSolicitud({ params }: { params: Promise<{ i
                         </select>
                       </label>
                     ) : (
-                      <label>
+                      <div className="sm:col-span-2">
                         <span className="etiqueta-campo">Nueva fecha y hora</span>
-                        <input type="datetime-local" name="inicio" required min={minimoLocal()} className="campo" />
-                      </label>
+                        <SelectorCalendario casillas={casillas} minimo={minimoLocal()} duracionMin={s.duracion_min ?? 30} detalle />
+                      </div>
                     )}
                     <label>
                       <span className="etiqueta-campo">Motivo</span>
