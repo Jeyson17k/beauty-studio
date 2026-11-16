@@ -10,10 +10,10 @@ export const dynamic = "force-dynamic";
 export default async function Inicio() {
   const [servicios, cursos] = await Promise.all([serviciosActivos(), cursosActivos()]);
   const areas = [
-    { titulo: "Maquillaje", href: "/servicios", img: "/img/g_r1c1.jpg" },
-    { titulo: "Peinado", href: "/servicios", img: "/img/mood3.jpg" },
-    { titulo: "Cursos", href: "/cursos", img: "/img/g_r0c0.jpg" },
-    { titulo: "Productos", href: "/catalogo", img: "/img/mood1.jpg" },
+    { titulo: "Maquillaje", img: "/img/area_maquillaje.jpg" },
+    { titulo: "Peinado", img: "/img/area_peinado.jpg" },
+    { titulo: "Cursos", img: "/img/area_cursos_v2.jpg" },
+    { titulo: "Productos", img: "/img/area_productos.jpg" },
   ];
   return (
     <div>
@@ -57,9 +57,10 @@ export default async function Inicio() {
           </div>
           <div className="relative mx-auto w-full max-w-[340px] md:max-w-none">
             <div aria-hidden className="absolute -inset-3 rounded-[48%_48%_32px_32px] border border-oro-300/40" />
-            <div className="relative overflow-hidden rounded-[46%_46%_28px_28px] border-2 border-oro-300/70">
-              <Image src="/img/hero_portrait.jpg" alt="Andrea Paola" width={360} height={522} priority className="h-[420px] w-full object-cover md:h-[520px]" />
-              <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-negro-950/90 to-transparent p-5 pt-16">
+            <div className="relative overflow-hidden rounded-[46%_46%_28px_28px] border-2 border-oro-300/70 bg-negro-900">
+              {/* Foto completa de Andrea (cabeza a pies): el texto va debajo para no taparla */}
+              <Image src="/img/hero_andrea_v2.jpg" alt="Andrea Paola" width={1000} height={1000} priority className="block h-auto w-full" />
+              <div className="bg-negro-900 px-5 pb-5 pt-3 text-center">
                 <p className="font-titulo text-xl font-semibold uppercase tracking-[0.14em]">Agenda abierta</p>
                 <p className="text-sm text-white/70">Graduaciones, bodas, sesiones de fotos y eventos</p>
               </div>
@@ -80,13 +81,13 @@ export default async function Inicio() {
           </div>
           <div className="mt-8 grid grid-cols-2 gap-3 md:grid-cols-4 md:gap-5">
             {areas.map((a) => (
-              <Link key={a.titulo} href={a.href} className="group relative block overflow-hidden rounded-2xl">
-                <Image src={a.img} alt="" width={300} height={400} className="h-48 w-full object-cover transition duration-500 group-hover:scale-105 md:h-72" />
+              <div key={a.titulo} className="relative block overflow-hidden rounded-2xl">
+                <Image src={a.img} alt="" width={600} height={800} className="h-48 w-full object-cover md:h-72" />
                 <div className="absolute inset-0 bg-gradient-to-t from-negro-950/85 via-negro-950/10 to-transparent" />
                 <span className="cinta oro-degradado absolute bottom-4 left-0 py-1.5 pl-4 pr-7 font-titulo text-sm font-semibold uppercase tracking-[0.16em] text-negro-950 md:text-base">
                   {a.titulo}
                 </span>
-              </Link>
+              </div>
             ))}
           </div>
         </div>
@@ -104,7 +105,7 @@ export default async function Inicio() {
           <div className="mt-8 grid grid-cols-2 gap-3 md:gap-4 lg:grid-cols-4">
             {servicios.slice(0, 4).map((s) => (
               <Link key={s.id} href={`/servicios/${s.id}`} className="group tarjeta overflow-hidden transition hover:-translate-y-1 hover:shadow-lg">
-                {s.imagen_url && <Image src={s.imagen_url} alt={s.nombre} width={444} height={312} className="h-32 w-full object-cover md:h-44" />}
+                {s.imagen_url && <Image src={s.imagen_url} alt={s.nombre} width={800} height={800} className="aspect-square w-full object-cover" />}
                 <div className="p-3 md:p-4">
                   <p className="font-titulo text-base font-semibold uppercase tracking-wide md:text-lg">{s.nombre}</p>
                   <p className="mt-1 line-clamp-2 text-xs text-gris-600 md:text-sm">{s.descripcion}</p>

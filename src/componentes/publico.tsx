@@ -107,7 +107,7 @@ export function PiePublico({ whatsapp }: { whatsapp: string }) {
         </div>
         <div>
           <p className="font-titulo text-sm font-semibold uppercase tracking-[0.18em] text-oro-300">Visítanos</p>
-          <p className="mt-3">Los Cedros, León, Nicaragua</p>
+          <p className="mt-3">Los Cedros, Carretera Vieja a León, Nicaragua</p>
           <p className="mt-1">Atención en el salón y a domicilio</p>
         </div>
         <div>
