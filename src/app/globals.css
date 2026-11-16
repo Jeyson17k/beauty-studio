@@ -148,3 +148,11 @@ body { background: var(--color-crema-100); color: var(--color-texto-900); }
   .acc-centella { opacity: 0.6; }
   .acc-aro { display: none; }
 }
+
+/* Pantalla de acceso (login y recuperación): fondo crema y tarjeta única con la foto de Andrea */
+.acc-crema { background: radial-gradient(800px 520px at 8% 0%, rgba(201, 162, 94, 0.28), transparent 62%), radial-gradient(700px 520px at 100% 100%, rgba(201, 162, 94, 0.22), transparent 60%), #f6f1e7; }
+.acc-tarjeta-crema { background: #fffdf9; box-shadow: 0 40px 90px -30px rgba(60, 40, 10, 0.45), 0 0 0 1px rgba(156, 122, 60, 0.25); }
+.acc-tarjeta-crema .campo { transition: border-color 0.2s, box-shadow 0.2s; }
+.acc-tarjeta-crema .campo:focus { box-shadow: 0 0 0 3px rgba(232, 211, 166, 0.75); }
+.acc-boton-oscuro { background: #14110c; color: #f1ddb0; border-radius: 9999px; font-weight: 600; transition: transform 0.2s, box-shadow 0.2s; }
+.acc-boton-oscuro:hover { transform: translateY(-2px); box-shadow: 0 14px 26px -12px rgba(20, 17, 12, 0.8); }
