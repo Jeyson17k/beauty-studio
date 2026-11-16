@@ -12,7 +12,8 @@
     "db:reiniciar": "tsx scripts/db.ts reiniciar",
     "test": "vitest run",
     "typecheck": "tsc --noEmit",
-    "db:demo": "tsx scripts/demo.ts"
+    "db:demo": "tsx scripts/demo.ts",
+    "demo": "node scripts/demo-abrir.mjs"
   },
   "dependencies": {
     "bcryptjs": "^3.0.3",
