@@ -2,6 +2,7 @@ import Link from "next/link";
 import { listarPedidos } from "@/modulos/pedidos";
 import { fechaHora, moneda } from "@/lib/tiempo";
 import { EncabezadoPanel, Etiqueta, Vacio } from "@/componentes/ui";
+import { PestanasPanel, PESTANAS_INVENTARIO } from "@/componentes/PestanasPanel";
 
 export const dynamic = "force-dynamic";
 export const metadata = { title: "Pedidos" };
@@ -12,11 +13,12 @@ export default async function Pedidos({ searchParams }: { searchParams: Promise<
   const filas = await listarPedidos(sp.estado);
   return (
     <>
-      <EncabezadoPanel titulo="Pedidos">
+      <EncabezadoPanel titulo="Pedidos e inventario">
         <Link href="/panel/pedidos/nuevo" className="btn-primario">
           + Pedido por una clienta
         </Link>
       </EncabezadoPanel>
+      <PestanasPanel pestanas={PESTANAS_INVENTARIO} activa="/panel/pedidos" />
       <div className="space-y-4 p-5 lg:p-8">
         <div className="flex flex-wrap gap-2 text-sm">
           {["", "Pendiente de confirmación", "Reservado", "Cerrado", "Cancelado", "Expirado"].map((e) => (

@@ -1,6 +1,7 @@
 import { reporte } from "@/modulos/reportes";
 import { diaLocal, moneda } from "@/lib/tiempo";
 import { EncabezadoPanel, Vacio } from "@/componentes/ui";
+import { PestanasPanel, PESTANAS_FINANZAS } from "@/componentes/PestanasPanel";
 
 export const dynamic = "force-dynamic";
 export const metadata = { title: "Reportes" };
@@ -38,7 +39,8 @@ export default async function Reportes({ searchParams }: { searchParams: Promise
   const r = await reporte(p);
   return (
     <>
-      <EncabezadoPanel titulo="Reportes" />
+      <EncabezadoPanel titulo="Ventas, gastos y reportes" />
+      <PestanasPanel pestanas={PESTANAS_FINANZAS} activa="/panel/reportes" />
       <div className="space-y-5 p-5 lg:p-8">
         <form className="tarjeta flex flex-wrap items-end gap-3 p-4">
           <label>

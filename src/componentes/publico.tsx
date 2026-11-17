@@ -125,11 +125,7 @@ export function PiePublico({ whatsapp }: { whatsapp: string }) {
           </div>
         </div>
       </div>
-      <p className="border-t border-white/10 py-4 text-center text-xs text-white/40">© {new Date().getFullYear()} Andrea Paola · Beauty Studio ·{" "}
-        <Link href="/panel/login" className="hover:text-oro-200">
-          Acceso de administradora
-        </Link>
-      </p>
+      <p className="border-t border-white/10 py-4 text-center text-xs text-white/40">© {new Date().getFullYear()} Andrea Paola · Beauty Studio</p>
     </footer>
   );
 }

@@ -2,6 +2,7 @@ import { categoriasGasto, gastos } from "@/modulos/inventario";
 import { diaLocal, moneda } from "@/lib/tiempo";
 import { Formulario } from "@/componentes/Formulario";
 import { EncabezadoPanel, Vacio } from "@/componentes/ui";
+import { PestanasPanel, PESTANAS_FINANZAS } from "@/componentes/PestanasPanel";
 import { accionEliminarGasto, accionGasto } from "../../acciones";
 
 export const dynamic = "force-dynamic";
@@ -17,7 +18,8 @@ export default async function Gastos({ searchParams }: { searchParams: Promise<{
   const total = lista.reduce((s, g) => s + Number(g.monto), 0);
   return (
     <>
-      <EncabezadoPanel titulo="Gastos" />
+      <EncabezadoPanel titulo="Ventas, gastos y reportes" />
+      <PestanasPanel pestanas={PESTANAS_FINANZAS} activa="/panel/gastos" />
       <div className="grid gap-5 p-5 lg:p-8 xl:grid-cols-[1fr_1.3fr]">
         <section className="tarjeta p-4">
           <h2 className="font-bold">Registrar costo o gasto</h2>

@@ -2,6 +2,7 @@ import { productos, ventasRecientes } from "@/modulos/inventario";
 import { fechaHora, moneda } from "@/lib/tiempo";
 import { Formulario } from "@/componentes/Formulario";
 import { EncabezadoPanel, Etiqueta, Vacio } from "@/componentes/ui";
+import { PestanasPanel, PESTANAS_FINANZAS } from "@/componentes/PestanasPanel";
 import { accionVentaDirecta } from "../../acciones";
 
 export const dynamic = "force-dynamic";
@@ -13,7 +14,8 @@ export default async function Ventas() {
   const disponibles = lista.filter((p) => p.activo && p.disponible > 0);
   return (
     <>
-      <EncabezadoPanel titulo="Ventas" />
+      <EncabezadoPanel titulo="Ventas, gastos y reportes" />
+      <PestanasPanel pestanas={PESTANAS_FINANZAS} activa="/panel/ventas" />
       <div className="grid gap-5 p-5 lg:p-8 xl:grid-cols-[1fr_1fr]">
         <section className="tarjeta p-4">
           <h2 className="font-bold">Registrar venta directa en el local</h2>

@@ -1,31 +1,16 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { Logo } from "@/componentes/ui";
+import { MenuPanel } from "@/componentes/MenuPanel";
 import { sesionAdmin } from "@/lib/sesion";
 import { modoWhatsApp } from "@/modulos/whatsapp/cliente";
 import { accionLogout } from "../acciones";
 
 export const dynamic = "force-dynamic";
 
-const MENU = [
-  ["/panel", "Panel de inicio"],
-  ["/panel/registrar", "Registrar por una clienta"],
-  ["/panel/solicitudes", "Solicitudes"],
-  ["/panel/agenda", "Agenda"],
-  ["/panel/pedidos", "Pedidos"],
-  ["/panel/productos", "Productos e inventario"],
-  ["/panel/ventas", "Ventas"],
-  ["/panel/gastos", "Gastos"],
-  ["/panel/reportes", "Reportes"],
-  ["/panel/mensajes", "Mensajes de WhatsApp"],
-  ["/panel/whatsapp-prueba", "Teléfono de prueba"],
-  ["/panel/servicios", "Servicios"],
-  ["/panel/cursos", "Cursos y sesiones"],
-  ["/panel/configuracion", "Configuración"],
-  ["/cambiar-perfil?a=clienta", "Cambiar a perfil de clienta"],
-];
+export const metadata = { robots: { index: false, follow: false } };
 
-// Panel de Andrea (A02 a A16). Las rutas están protegidas por el middleware y aquí se vuelve a comprobar la sesión.
+// Panel de Andrea (A02 a A22). El menú lateral sigue el prototipo de Figma (M10). Las rutas están protegidas por el middleware y aquí se vuelve a comprobar la sesión.
 export default async function LayoutPanel({ children }: { children: React.ReactNode }) {
   const s = await sesionAdmin();
   if (!s) redirect("/panel/login");
@@ -37,15 +22,12 @@ export default async function LayoutPanel({ children }: { children: React.ReactN
             <Logo claro />
           </Link>
         </div>
-        <nav className="flex gap-1 overflow-x-auto px-3 pb-3 text-sm lg:flex-1 lg:flex-col lg:overflow-visible">
-          {MENU.map(([href, t]) => (
-            <Link key={href} href={href} className="whitespace-nowrap rounded-lg px-3 py-2.5 text-[#e8dcc6] hover:bg-negro-800 hover:text-white">
-              {t}
-            </Link>
-          ))}
-        </nav>
+        <MenuPanel simulado={modoWhatsApp() === "simulado"} />
         <div className="hidden px-5 pb-5 text-xs text-[#e8dcc6] lg:block">
           {modoWhatsApp() === "simulado" && <p className="mb-2 rounded-lg bg-aviso-100 px-2 py-1 font-semibold text-aviso-700">WhatsApp en modo simulado</p>}
+          <Link href="/cambiar-perfil?a=clienta" className="mb-2 block font-semibold text-oro-300 hover:underline">
+            Ver la página como clienta
+          </Link>
           <p>Andrea · {s.rol}</p>
           <form action={accionLogout}>
             <button className="mt-2 font-semibold text-oro-300 hover:underline">Cerrar sesión</button>

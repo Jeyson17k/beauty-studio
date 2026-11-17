@@ -6,7 +6,7 @@ import { PantallaAcceso } from "@/componentes/PantallaAcceso";
 import { sesionAdmin } from "@/lib/sesion";
 import { accionLogin } from "../acciones";
 
-export const metadata = { title: "Iniciar sesión" };
+export const metadata = { title: "Iniciar sesión", robots: { index: false, follow: false } };
 
 // A01 Iniciar sesión (CU-10)
 export default async function Login({ searchParams }: { searchParams: Promise<{ siguiente?: string }> }) {
