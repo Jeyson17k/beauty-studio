@@ -146,8 +146,8 @@ export default async function Inicio() {
           <div className="relative">
             <div className="rounded-3xl border border-white/10 bg-negro-800/60 p-3 shadow-2xl">
               <div className="grid grid-cols-2 gap-3">
-                <Image src="/img/g_r2c1.jpg" alt="" width={246} height={328} className="h-56 w-full rounded-2xl object-cover md:h-72" />
-                <Image src="/img/g_r3c1.jpg" alt="" width={246} height={330} className="mt-8 h-56 w-full rounded-2xl object-cover md:h-72" />
+                <Image src="/img/curso_certificado.jpg" alt="Alumna con su certificado junto a Andrea" width={800} height={1000} className="aspect-[4/5] w-full rounded-2xl object-cover" />
+                <Image src="/img/curso_sesion.jpg" alt="Andrea maquillando a una alumna" width={800} height={1000} className="mt-8 aspect-[4/5] w-full rounded-2xl object-cover" />
               </div>
             </div>
           </div>
@@ -172,7 +172,7 @@ export default async function Inicio() {
             </div>
           </div>
           <div className="tarjeta overflow-hidden">
-            <Image src="/img/andrea_wide.jpg" alt="Andrea Paola" width={900} height={600} className="h-52 w-full object-cover" />
+            <Image src="/img/andrea_agenda.jpg" alt="Andrea Paola" width={1000} height={750} className="aspect-[4/3] w-full object-cover" />
             <div className="p-5">
               <p className="font-titulo text-xl font-semibold uppercase tracking-wide">Revisa la agenda</p>
               <p className="mt-1 text-sm text-gris-600">Mira qué horarios ya están apartados o confirmados antes de elegir tu fecha.</p>
