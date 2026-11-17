@@ -24,7 +24,7 @@ const PASO = 30;
 
 /**
  * Calendario para elegir día y hora (RF-05, RN-05.1, RN-05.6, RN-05.7).
- * Los horarios ocupados se bloquean; las solicitudes pendientes de revisión no bloquean y solo se muestran a Andrea.
+ * Los horarios ocupados y los pendientes de pago (apartado de 24 h) se bloquean; las solicitudes pendientes de revisión no bloquean y solo se muestran a Andrea.
  * Envía el valor como «AAAA-MM-DDTHH:mm» en el campo `nombre`, igual que un datetime-local.
  */
 export function SelectorCalendario({ nombre = "inicio", casillas, minimo, duracionMin = 30, detalle = false }: { nombre?: string; casillas: Casilla[]; minimo: string; duracionMin?: number; detalle?: boolean }) {
@@ -38,7 +38,7 @@ export function SelectorCalendario({ nombre = "inicio", casillas, minimo, duraci
   const [hora, setHora] = useState<number | null>(null);
 
   const filas = useMemo(() => casillas.map((c) => ({ ...c, ini: aLocalMs(c.i), fin: aLocalMs(c.f) })), [casillas]);
-  const procesoSolo = (k: string) => filas.filter((c) => clave(c.ini) === k).every((c) => c.t === "e");
+  const pagoSolo = (k: string) => filas.filter((c) => clave(c.ini) === k).every((c) => c.t === "e");
   const ocupadoDia = (k: string) => filas.some((c) => clave(c.ini) === k || (clave(c.ini) < k && clave(c.fin - 1) >= k));
 
   const primero = Date.UTC(mes.a, mes.m, 1);
@@ -101,7 +101,7 @@ export function SelectorCalendario({ nombre = "inicio", casillas, minimo, duraci
               className={`relative h-10 rounded-lg text-sm font-semibold transition ${sel ? "bg-negro-950 text-white" : pasado ? "text-gris-600/40" : "bg-crema-100 hover:bg-crema-300"} ${k === hoyClave && !sel ? "ring-2 ring-oro-300" : ""}`}
             >
               {Number(k.slice(8))}
-              {ocup && !pasado && <span className={`absolute bottom-1 left-1/2 h-1.5 w-1.5 -translate-x-1/2 rounded-full ${sel ? "bg-oro-300" : detalle && procesoSolo(k) ? "bg-aviso-700" : "bg-error-700"}`} />}
+              {ocup && !pasado && <span className={`absolute bottom-1 left-1/2 h-1.5 w-1.5 -translate-x-1/2 rounded-full ${sel ? "bg-oro-300" : pagoSolo(k) ? "bg-aviso-700" : "bg-error-700"}`} />}
             </button>
           );
         })}
@@ -110,11 +110,9 @@ export function SelectorCalendario({ nombre = "inicio", casillas, minimo, duraci
         <span className="flex items-center gap-1.5">
           <span className="h-2 w-2 rounded-full bg-error-700" /> Día con horarios ocupados
         </span>
-        {detalle && (
-          <span className="flex items-center gap-1.5">
-            <span className="h-2 w-2 rounded-full bg-aviso-700" /> En proceso (24 h para el anticipo) o por revisar
-          </span>
-        )}
+        <span className="flex items-center gap-1.5">
+          <span className="h-2 w-2 rounded-full bg-aviso-700" /> {detalle ? "Pendiente de pago (24 h para el anticipo) o solicitud por revisar" : "Día con horarios pendientes de pago"}
+        </span>
       </div>
 
       {dia && (
@@ -130,7 +128,7 @@ export function SelectorCalendario({ nombre = "inicio", casillas, minimo, duraci
                   type="button"
                   disabled={off}
                   onClick={() => setHora(f.min)}
-                  className={`rounded-lg border px-2 py-2 text-xs font-semibold ${sel ? "border-negro-950 bg-negro-950 text-white" : f.estado === "ocupada" ? (f.proceso && detalle ? "border-aviso-100 bg-aviso-100 text-aviso-700 line-through" : "border-error-100 bg-error-100 text-error-700 line-through") : off ? "border-linea-200 text-gris-600/40" : f.pendiente && detalle ? "border-aviso-700 bg-aviso-100 text-aviso-700" : "border-linea-200 bg-white hover:border-oro-700"}`}
+                  className={`rounded-lg border px-2 py-2 text-xs font-semibold ${sel ? "border-negro-950 bg-negro-950 text-white" : f.estado === "ocupada" ? (f.proceso ? "border-aviso-100 bg-aviso-100 text-aviso-700 line-through" : "border-error-100 bg-error-100 text-error-700 line-through") : off ? "border-linea-200 text-gris-600/40" : f.pendiente && detalle ? "border-aviso-700 bg-aviso-100 text-aviso-700" : "border-linea-200 bg-white hover:border-oro-700"}`}
                 >
                   {horaTxt(f.ms)}
                 </button>
@@ -140,11 +138,11 @@ export function SelectorCalendario({ nombre = "inicio", casillas, minimo, duraci
           {delDia.length > 0 && (
             <ul className="mt-3 space-y-1 text-xs">
               {delDia.map((c, i) => (
-                <li key={i} className={`rounded-lg px-2.5 py-1.5 ${c.t === "o" || (c.t === "e" && !detalle) ? "bg-error-100 text-error-700" : "bg-aviso-100 text-aviso-700"}`}>
+                <li key={i} className={`rounded-lg px-2.5 py-1.5 ${c.t === "o" ? "bg-error-100 text-error-700" : "bg-aviso-100 text-aviso-700"}`}>
                   <span className="font-semibold">
                     {horaTxt(c.ini)} – {horaTxt(c.fin)}
                   </span>{" "}
-                  {c.t === "o" || (c.t === "e" && !detalle) ? "Ocupado" : c.t === "e" ? "En proceso" : "Por revisar"}
+                  {c.t === "o" ? "Ocupado" : c.t === "e" ? "Pendiente de pago" : "Por revisar"}
                   {detalle && c.e ? ` · ${c.e}` : ""}
                 </li>
               ))}

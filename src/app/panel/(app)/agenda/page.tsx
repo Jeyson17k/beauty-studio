@@ -40,10 +40,10 @@ export default async function Agenda({ searchParams }: { searchParams: Promise<{
       <div className="p-5 lg:p-8">
         <div className="mb-3 flex flex-wrap gap-4 text-xs text-gris-600">
           <span className="flex items-center gap-1.5">
-            <span className="h-3 w-3 rounded bg-ok-700" /> Confirmada
+            <span className="h-3 w-3 rounded bg-ok-700" /> Confirmada (apartado en firme)
           </span>
           <span className="flex items-center gap-1.5">
-            <span className="h-3 w-3 rounded bg-aviso-700" /> En proceso: cotización enviada, 24 h para pagar el anticipo (ya bloquea el horario)
+            <span className="h-3 w-3 rounded bg-aviso-700" /> Provisional · Pendiente de pago: cotización enviada, 24 h para el anticipo (ya aparta el horario)
           </span>
           <span className="flex items-center gap-1.5">
             <span className="h-3 w-3 rounded bg-info-700" /> Sesión grupal
@@ -75,7 +75,8 @@ export default async function Agenda({ searchParams }: { searchParams: Promise<{
                         </p>
                         {!f.sesion_id && f.estado === "Provisional" && (
                           <p className="mt-1 inline-flex items-center gap-1.5 rounded-full bg-aviso-100 px-2 py-0.5 text-[11px] font-semibold text-aviso-700">
-                            <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-aviso-700" /> En proceso · {restante(f.plazo)}
+                            <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-aviso-700" />{" "}
+                            {f.estado_solicitud === "Plazo vencido pendiente de revisión" ? "Plazo vencido · por revisar" : f.estado_solicitud === "Cotización en envío" ? "Cotización en envío" : `Pendiente de pago · ${restante(f.plazo)}`}
                           </p>
                         )}
                         {f.estado_solicitud && f.estado_solicitud !== "Confirmada" && (

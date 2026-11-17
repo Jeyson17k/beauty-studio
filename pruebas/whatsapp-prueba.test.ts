@@ -1,4 +1,4 @@
-// Número de prueba de WhatsApp y estado «En proceso» en el calendario.
+// Número de prueba de WhatsApp y estado «Pendiente de pago» en el calendario.
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { pool } from "@/lib/db";
 import { bandejaSimulada, numeroPrueba } from "@/modulos/whatsapp/cliente";
@@ -29,16 +29,16 @@ describe("WhatsApp de prueba y calendario", () => {
     expect(bandejaSimulada()[0].destino).toBe("+50588001234");
   });
 
-  it("PF-58 · la cita con cotización enviada aparece «En proceso» para Andrea y «Ocupado» para el público", async () => {
+  it("PF-58 · la cita con cotización enviada aparece «Pendiente de pago» (E1) para Andrea y para el público, sin datos personales", async () => {
     const { id } = await solicitudServicio();
     await guardarCotizacion(UID, id, 800, 60, null);
     await enviarCotizacion(UID, id);
     const admin = await datosCalendario(true);
     const publico = await datosCalendario(false);
     expect(admin.filter((c) => c.t === "e")).toHaveLength(1);
-    expect(admin.find((c) => c.t === "e")!.e).toMatch(/en proceso/);
+    expect(admin.find((c) => c.t === "e")!.e).toMatch(/pendiente de pago/);
     expect(publico).toHaveLength(1);
-    expect(publico[0].t).toBe("o");
+    expect(publico[0].t).toBe("e");
     expect(publico[0].e).toBeUndefined(); // sin datos personales (RN-05.6)
   });
 });

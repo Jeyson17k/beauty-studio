@@ -184,10 +184,10 @@ export async function abrirSesion(c: PoolClient, sesionId: number) {
   await recalcularSesion(c, sesionId);
 }
 
-/** Intervalos ocupados para la vista pública, sin datos personales (RN-05.6). */
+/** Intervalos ocupados para la vista pública, sin datos personales (RN-05.6). «pendiente_pago» = apartado provisional (E1: Pendiente de pago). */
 export async function ocupacionPublica(desde: Date, hasta: Date) {
-  return q<{ inicio: Date; fin: Date }>(
-    `SELECT inicio, fin FROM actividad_agenda
+  return q<{ inicio: Date; fin: Date; pendiente_pago: boolean }>(
+    `SELECT inicio, fin, (estado = 'Provisional') AS pendiente_pago FROM actividad_agenda
      WHERE estado IN ('Provisional','Confirmada') AND inicio < $2 AND fin > $1 ORDER BY inicio`,
     [desde, hasta],
   );
@@ -217,7 +217,7 @@ export async function agendaAdmin(desde: Date, hasta: Date): Promise<FilaAgenda[
   );
 }
 
-/** Entrada del calendario de selección: «o» ocupado (bloquea), «e» en proceso (cotización enviada, 24 h para el anticipo; también bloquea) o «p» solicitud pendiente de revisión (solo aviso, RN-05.7). */
+/** Entrada del calendario de selección: «o» ocupado en firme (Confirmada), «e» pendiente de pago (cotización enviada, 24 h para el anticipo; apartado provisional que también bloquea) o «p» solicitud pendiente de revisión (solo aviso, RN-05.7). */
 export type CasillaCalendario = { i: string; f: string; t: "o" | "e" | "p"; e?: string };
 
 /**
@@ -229,12 +229,12 @@ export async function datosCalendario(admin: boolean): Promise<CasillaCalendario
   const hasta = new Date(Date.now() + 120 * 86_400_000);
   if (!admin) {
     const o = await ocupacionPublica(desde, hasta);
-    return o.map((x) => ({ i: new Date(x.inicio).toISOString(), f: new Date(x.fin).toISOString(), t: "o" as const }));
+    return o.map((x) => ({ i: new Date(x.inicio).toISOString(), f: new Date(x.fin).toISOString(), t: x.pendiente_pago ? ("e" as const) : ("o" as const) }));
   }
   const filas = await agendaAdmin(desde, hasta);
   const ocupados: CasillaCalendario[] = filas.map((f) => ({
     i: new Date(f.inicio).toISOString(), f: new Date(f.fin).toISOString(), t: f.estado === "Provisional" ? "e" : "o",
-    e: `${f.actividad}${f.clienta ? ` · ${f.clienta}` : ""}${f.estado === "Provisional" ? ` · en proceso${f.plazo ? `, el anticipo vence ${fechaHora(f.plazo)}` : ""}` : ""}`,
+    e: `${f.actividad}${f.clienta ? ` · ${f.clienta}` : ""}${f.estado === "Provisional" ? (f.estado_solicitud === "Plazo vencido pendiente de revisión" ? " · plazo vencido, por revisar" : ` · pendiente de pago${f.plazo ? `, el anticipo vence ${fechaHora(f.plazo)}` : ""}`) : ""}`,
   }));
   const pend = await q<{ inicio: Date; actividad: string; clienta: string; directo: boolean; dur: number }>(
     `SELECT s.inicio_solicitado AS inicio, COALESCE(sv.nombre, cu.nombre, 'Actividad') AS actividad, c.nombre AS clienta, s.registro_directo AS directo,

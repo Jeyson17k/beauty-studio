@@ -8,7 +8,7 @@ export const metadata = { title: "Disponibilidad" };
 
 const fmt = (d: Date, o: Intl.DateTimeFormatOptions) => new Intl.DateTimeFormat("es-NI", { timeZone: ZONA, ...o }).format(d);
 
-// P06 Disponibilidad: muestra solo los intervalos ocupados, sin datos personales (RN-05.6).
+// P06 Disponibilidad: muestra solo los intervalos ocupados o pendientes de pago, sin datos personales (RN-05.6).
 // Las solicitudes pendientes de revisión no bloquean horarios (RN-05.7).
 // Teléfono: lista de días. Computadora: semana en 7 columnas. La lógica de la semana no cambia.
 export default async function Disponibilidad({ searchParams }: { searchParams: Promise<{ desde?: string }> }) {
@@ -42,10 +42,13 @@ export default async function Disponibilidad({ searchParams }: { searchParams: P
         </div>
         <div className="mt-3 flex flex-wrap gap-4 text-xs text-gris-600">
           <span className="flex items-center gap-1.5">
-            <span className="h-3 w-3 rounded-full bg-error-100 ring-1 ring-error-700/40" /> Ocupado
+            <span className="h-3 w-3 rounded-full bg-error-100 ring-1 ring-error-700/40" /> Ocupado (confirmado)
           </span>
           <span className="flex items-center gap-1.5">
-            <span className="h-3 w-3 rounded-full bg-ok-100 ring-1 ring-ok-700/40" /> Sin horarios ocupados
+            <span className="h-3 w-3 rounded-full bg-aviso-100 ring-1 ring-aviso-700/40" /> Pendiente de pago (apartado 24 h)
+          </span>
+          <span className="flex items-center gap-1.5">
+            <span className="h-3 w-3 rounded-full bg-ok-100 ring-1 ring-ok-700/40" /> Libre
           </span>
         </div>
 
@@ -63,12 +66,12 @@ export default async function Disponibilidad({ searchParams }: { searchParams: P
                 <div className="flex-1">
                   {esHoy && <p className="text-[11px] font-semibold uppercase tracking-wide text-oro-700">Hoy</p>}
                   {del.length === 0 ? (
-                    <p className="text-sm text-ok-700">Sin horarios ocupados</p>
+                    <p className="text-sm text-ok-700">Libre</p>
                   ) : (
                     <ul className="flex flex-wrap gap-1.5 lg:flex-col">
                       {del.map((o, i) => (
-                        <li key={i} className="rounded-full bg-error-100 px-2.5 py-1 text-xs font-semibold text-error-700 lg:rounded-lg">
-                          <span className="lg:block lg:text-[10px] lg:uppercase lg:tracking-wider">Ocupado</span> {hora(o.inicio)} – {hora(o.fin)}
+                        <li key={i} className={`rounded-full px-2.5 py-1 text-xs font-semibold lg:rounded-lg ${o.pendiente_pago ? "bg-aviso-100 text-aviso-700" : "bg-error-100 text-error-700"}`}>
+                          <span className="lg:block lg:text-[10px] lg:uppercase lg:tracking-wider">{o.pendiente_pago ? "Pendiente de pago" : "Ocupado"}</span> {hora(o.inicio)} – {hora(o.fin)}
                         </li>
                       ))}
                     </ul>

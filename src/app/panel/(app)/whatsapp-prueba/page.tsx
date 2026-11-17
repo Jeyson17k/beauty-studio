@@ -103,7 +103,7 @@ export default function TelefonoPrueba() {
             <ol className="mt-2 list-decimal space-y-1 pl-5 text-gris-600">
               <li>Registra una solicitud (por la página o con «Registrar por una clienta»).</li>
               <li>Abre la solicitud, registra la cotización y presiona «Enviar cotización».</li>
-              <li>La cotización llega a este teléfono y la cita pasa a <strong>En proceso</strong> en el calendario (24 horas para el anticipo).</li>
+              <li>La cotización llega a este teléfono y la cita pasa a <strong>Pendiente de pago</strong> en el calendario (24 horas para el anticipo).</li>
               <li>Registra el comprobante y valida el pago: llega el aviso de confirmación y la cita queda confirmada.</li>
             </ol>
           </section>
