@@ -33,8 +33,12 @@ export default async function PedidoListo({ params }: { params: Promise<{ id: st
             <strong>{moneda(i.subtotal)}</strong>
           </li>
         ))}
-        <li className="flex justify-between p-3 font-bold">
+        <li className="flex justify-between p-3">
           <span>Total de productos</span>
+          <span>{items.reduce((n, i) => n + i.cantidad, 0)}</span>
+        </li>
+        <li className="flex justify-between p-3 font-bold">
+          <span>Total de la compra</span>
           <span>{moneda(p.subtotal_productos)}</span>
         </li>
       </ul>

@@ -60,10 +60,16 @@ export default async function Carrito() {
               </li>
             ))}
           </ul>
-          <p className="mt-4 flex justify-between rounded-2xl bg-negro-950 px-5 py-4 text-lg font-bold text-white">
-            <span>Total de productos</span>
-            <span className="text-oro-300">{moneda(total)}</span>
-          </p>
+          <div className="mt-4 rounded-2xl bg-negro-950 px-5 py-4 text-white">
+            <p className="flex justify-between text-sm text-white/70">
+              <span>Total de productos</span>
+              <span>{items.reduce((n, i) => n + i.cantidad, 0)}</span>
+            </p>
+            <p className="mt-2 flex justify-between text-lg font-bold">
+              <span>Total de la compra</span>
+              <span className="text-oro-300">{moneda(total)}</span>
+            </p>
+          </div>
           </div>
           <div className="tarjeta p-5 lg:sticky lg:top-24">
             <h2 className="font-bold">Entrega</h2>

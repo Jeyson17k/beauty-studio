@@ -123,7 +123,8 @@ export async function mensajePedido(id: number) {
   const lineas = items.map((i) => `• ${i.nombre} ×${i.cantidad}: ${moneda(i.subtotal)}`).join("\n");
   const texto =
     `Hola Andrea, soy ${p.clienta}. Quiero hacer el pedido #${p.id} de Beauty Studio:\n${lineas}\n` +
-    `Total de productos: ${moneda(p.subtotal_productos)}\n` +
+    `Total de productos: ${items.reduce((n, i) => n + i.cantidad, 0)}\n\n` +
+    `Total de la compra: ${moneda(p.subtotal_productos)}\n\n` +
     `Entrega: ${p.tipo_entrega === "delivery" ? `delivery a ${p.direccion}${p.referencia ? ` (${p.referencia})` : ""}` : "retiro en el local"}\n` +
     `Por confirmar: disponibilidad${p.tipo_entrega === "delivery" ? ", costo del delivery" : ""} y forma de pago.`;
   return { texto, numero: cfg.whatsapp_negocio };
