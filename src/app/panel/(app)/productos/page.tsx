@@ -1,7 +1,9 @@
 import { categoriasProducto, movimientos, productos } from "@/modulos/inventario";
 import { fechaHora, moneda } from "@/lib/tiempo";
 import { Formulario } from "@/componentes/Formulario";
+import { CampoFoto } from "@/componentes/CampoFoto";
 import { EncabezadoPanel, Etiqueta, Vacio } from "@/componentes/ui";
+import { PestanasPanel, PESTANAS_INVENTARIO } from "@/componentes/PestanasPanel";
 import { accionAjuste, accionEntrada, accionGuardarProducto } from "../../acciones";
 
 export const dynamic = "force-dynamic";
@@ -39,10 +41,7 @@ function CamposProducto({ p, cats }: { p?: P; cats: { id: number; nombre: string
         <span className="etiqueta-campo">Stock mínimo</span>
         <input name="stock_minimo" type="number" min={0} defaultValue={p?.stock_minimo ?? 2} className="campo" />
       </label>
-      <label>
-        <span className="etiqueta-campo">Imagen (ruta, opcional)</span>
-        <input name="foto_url" defaultValue={p?.foto_url ?? ""} className="campo" />
-      </label>
+      <CampoFoto actual={p?.foto_url} nombre={p?.nombre} />
       <label className="flex items-center gap-2 text-sm">
         <input type="checkbox" name="visible_publico" defaultChecked={p?.visible_publico ?? true} className="h-4 w-4 accent-[#7a5c24]" /> Visible en el catálogo
       </label>
@@ -58,7 +57,8 @@ export default async function Productos() {
   const [lista, cats, movs] = await Promise.all([productos(), categoriasProducto(), movimientos()]);
   return (
     <>
-      <EncabezadoPanel titulo="Productos e inventario" />
+      <EncabezadoPanel titulo="Pedidos e inventario" />
+      <PestanasPanel pestanas={PESTANAS_INVENTARIO} activa="/panel/productos" />
       <div className="space-y-5 p-5 lg:p-8">
         <section className="tarjeta overflow-x-auto p-4">
           {lista.length === 0 ? (

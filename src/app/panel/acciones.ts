@@ -13,6 +13,7 @@ import { enviarAvisoConfirmacion, enviarCotizacion, registrarAvisoManual, regist
 import { cargarComprobante, declararExpiracion, rechazarComprobante, registrarAtencion, registrarSaldo, validarAnticipoYConfirmar } from "@/modulos/pagos";
 import { cancelarSesion, guardarCurso, guardarServicio, habilitarSesion, marcarSesionRealizada, programarSesion } from "@/modulos/catalogo";
 import { ejecutarTareas } from "@/modulos/planificador";
+import { guardarArchivo } from "@/lib/almacenamiento";
 import { cambiarEntrega, cancelarPedido, confirmarYReservar, pedidoPorAndrea, registrarPagoPedido } from "@/modulos/pedidos";
 import { eliminarGasto, guardarProducto, registrarAjuste, registrarEntrada, registrarGasto, registrarVentaDirecta } from "@/modulos/inventario";
 import type { EstadoForm } from "@/componentes/Formulario";
@@ -329,9 +330,15 @@ export async function accionCancelarPedido(_: EstadoForm, fd: FormData) {
 
 export async function accionGuardarProducto(_: EstadoForm, fd: FormData) {
   return ejecutar(async () => {
-    await guardarProducto(await uid(), {
+    const uidAdmin = await uid();
+    // Foto: archivo nuevo > quitar la actual > conservar la actual.
+    let foto_url: string | null = txt(fd, "foto_actual") || null;
+    if (fd.get("quitar_foto") === "on") foto_url = null;
+    const archivo = fd.get("foto");
+    if (archivo instanceof File && archivo.size > 0) foto_url = `/api/imagenes/${(await guardarArchivo(archivo, "productos")).split("/")[1]}`;
+    await guardarProducto(uidAdmin, {
       id: Number(fd.get("id")) || undefined, categoria_id: Number(fd.get("categoria_id")), nombre: txt(fd, "nombre"), descripcion: txt(fd, "descripcion") || null,
-      foto_url: txt(fd, "foto_url") || null, precio_venta: num(fd, "precio_venta"), stock_minimo: Number(txt(fd, "stock_minimo") || 0),
+      foto_url, precio_venta: num(fd, "precio_venta"), stock_minimo: Number(txt(fd, "stock_minimo") || 0),
       visible_publico: fd.get("visible_publico") === "on", activo: fd.get("activo") === "on",
     });
     return "Producto guardado.";

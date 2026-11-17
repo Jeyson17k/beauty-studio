@@ -10,9 +10,11 @@ const RAIZ = path.resolve(process.env.STORAGE_DIR || "./almacenamiento");
 const TIPOS: Record<string, string> = { "image/jpeg": "jpg", "image/png": "png", "image/webp": "webp", "image/heic": "heic", "application/pdf": "pdf" };
 export const MAX_BYTES = 8 * 1024 * 1024;
 
-export async function guardarArchivo(archivo: File, carpeta: "fotos" | "comprobantes"): Promise<string> {
-  const ext = TIPOS[archivo.type];
-  if (!ext) throw new ReglaError("Formato no admitido. Usa una imagen JPG, PNG, WEBP o HEIC" + (carpeta === "comprobantes" ? ", o un PDF." : "."));
+const TIPOS_PRODUCTO = ["image/jpeg", "image/png", "image/webp"]; // HEIC y PDF no se ven en el catálogo
+
+export async function guardarArchivo(archivo: File, carpeta: "fotos" | "comprobantes" | "productos"): Promise<string> {
+  const ext = carpeta === "productos" && !TIPOS_PRODUCTO.includes(archivo.type) ? undefined : TIPOS[archivo.type];
+  if (!ext) throw new ReglaError(carpeta === "productos" ? "Formato no admitido. Usa una imagen JPG, PNG o WEBP." : "Formato no admitido. Usa una imagen JPG, PNG, WEBP o HEIC" + (carpeta === "comprobantes" ? ", o un PDF." : "."));
   if (archivo.size > MAX_BYTES) throw new ReglaError("El archivo supera los 8 MB.");
   const nombre = `${new Date().toISOString().slice(0, 10)}-${crypto.randomUUID()}.${ext}`;
   const dir = path.join(RAIZ, carpeta);
