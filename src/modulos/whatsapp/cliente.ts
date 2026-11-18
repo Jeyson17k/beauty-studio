@@ -66,7 +66,8 @@ export async function enviarPlantilla(para: string, p: Plantilla): Promise<{ idE
   const token = process.env.WHATSAPP_TOKEN;
   if (!phoneId || !token) throw new ErrorWhatsApp("CONFIG", "Faltan WHATSAPP_PHONE_NUMBER_ID o WHATSAPP_TOKEN en el servidor");
 
-  const components: unknown[] = [{ type: "body", parameters: p.parametros.map((text) => ({ type: "text", text })) }];
+  // Una plantilla sin variables (p. ej. hello_world) se envía sin «components»: Meta rechaza un body vacío.
+  const components: unknown[] = p.parametros.length ? [{ type: "body", parameters: p.parametros.map((text) => ({ type: "text", text })) }] : [];
   if (p.codigo) components.push({ type: "button", sub_type: "url", index: "0", parameters: [{ type: "text", text: p.codigo }] });
 
   let res: Response;
@@ -79,7 +80,11 @@ export async function enviarPlantilla(para: string, p: Plantilla): Promise<{ idE
         recipient_type: "individual",
         to: destino.replace("+", ""),
         type: "template",
-        template: { name: p.nombre, language: { code: process.env.WHATSAPP_IDIOMA || "es" }, components },
+        template: {
+          name: p.nombre,
+          language: { code: p.idioma || process.env.WHATSAPP_IDIOMA || "es" },
+          ...(components.length ? { components } : {}),
+        },
       }),
       signal: AbortSignal.timeout(15_000),
     });

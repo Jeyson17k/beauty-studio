@@ -10,6 +10,7 @@ export type Plantilla = {
   parametros: string[];
   texto: string;
   codigo?: string; // solo en la plantilla de autenticación (botón «copiar código»)
+  idioma?: string; // para plantillas con un idioma distinto al de las tres principales (p. ej. hello_world en en_US)
 };
 
 // Las variables no pueden llevar saltos de línea, tabulaciones ni cuatro espacios seguidos (regla de Meta).
@@ -51,12 +52,17 @@ export function plantillaCodigo(codigo: string, vigenciaMin: number): Plantilla 
   };
 }
 
-/** Mensaje de prueba del panel: comprueba que el envío llega al número configurado. No se guarda en la lista de mensajes. */
+/**
+ * Mensaje de prueba del panel: comprueba que el envío llega al número configurado. No se guarda en la lista de mensajes.
+ * En modo «cloud» se usa «hello_world» (en_US), la única plantilla que Meta deja aprobada en toda cuenta nueva, para poder
+ * probar la conexión antes de que se aprueben las tres plantillas del proyecto.
+ */
 export function plantillaPrueba(): Plantilla {
   return {
     tipo: "Prueba",
-    nombre: "mensaje_de_prueba",
+    nombre: process.env.WHATSAPP_PLANTILLA_PRUEBA || "hello_world",
     parametros: [],
+    idioma: process.env.WHATSAPP_PLANTILLA_PRUEBA_IDIOMA || "en_US",
     texto: "¡Hola! Este es un mensaje de prueba de Beauty Studio. Si lo estás leyendo, el envío de WhatsApp funciona correctamente.",
   };
 }
