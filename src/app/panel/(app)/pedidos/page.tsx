@@ -58,7 +58,7 @@ export default async function Pedidos({ searchParams }: { searchParams: Promise<
                     <td>{moneda(p.total_final ?? p.subtotal_productos)}</td>
                     <td>
                       <Etiqueta texto={p.estado} tono={p.estado === "Reservado" ? "warn" : p.estado === "Cerrado" ? "ok" : p.estado.startsWith("Pendiente") ? "info" : "err"} />
-                      {p.estado === "Reservado" && p.estado_pago === "Pendiente" && <span className="block text-xs text-gris-600">vence {fechaHora(p.reservado_hasta)}</span>}
+                      {p.estado === "Reservado" && p.estado_pago === "Pendiente" && p.reservado_hasta && <span className="block text-xs text-gris-600">vence {fechaHora(p.reservado_hasta)}</span>}
                     </td>
                     <td>
                       <Etiqueta texto={p.estado_pago} tono={p.estado_pago === "Pagado" ? "ok" : "n"} />

@@ -59,6 +59,7 @@ export default async function SolicitarServicio({ searchParams }: { searchParams
             <span className="etiqueta-campo">Fotos de referencia (opcional, hasta 5)</span>
             <input type="file" name="fotos" accept="image/jpeg,image/png,image/webp,image/heic" multiple className="campo file:mr-3 file:rounded-full file:border-0 file:bg-crema-300 file:px-3 file:py-1 file:text-sm" />
           </label>
+          <p className="ayuda">Al enviar, te mandamos un código por WhatsApp para confirmar que el número es tuyo.</p>
         </Formulario>
       </div>
       <PasosLaterales />

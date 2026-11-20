@@ -1,8 +1,8 @@
 import { notFound } from "next/navigation";
-import { q } from "@/lib/db";
-import { detallePedido, pedido } from "@/modulos/pedidos";
+import { q, q1 } from "@/lib/db";
+import { detallePedido, pedido, plantillaAvisoPedido } from "@/modulos/pedidos";
 import { fechaHora, moneda } from "@/lib/tiempo";
-import { mostrarWhatsApp } from "@/lib/telefono";
+import { enlaceWhatsApp, mostrarWhatsApp } from "@/lib/telefono";
 import { Formulario } from "@/componentes/Formulario";
 import { Dato, EncabezadoPanel, Etiqueta, Volver } from "@/componentes/ui";
 import { accionCancelarPedido, accionConfirmarPedido, accionEntregaPedido, accionPagoPedido } from "../../../acciones";
@@ -14,13 +14,15 @@ export default async function DetallePedido({ params }: { params: Promise<{ id: 
   const id = Number((await params).id);
   const p = await pedido(id);
   if (!p) notFound();
-  const [items, reservas, pagos] = await Promise.all([
+  const [items, reservas, pagos, aviso, avisoTexto] = await Promise.all([
     detallePedido(id),
     q<{ producto: string; cantidad: number; estado: string; expira_en: Date | null }>(
       "SELECT pr.nombre AS producto, r.cantidad, r.estado, r.expira_en FROM reserva_inventario r JOIN producto pr ON pr.id = r.producto_id WHERE r.pedido_id = $1",
       [id],
     ),
     q<{ monto: number; registrado_en: Date }>("SELECT monto, registrado_en FROM pago WHERE pedido_id = $1", [id]),
+    q1<{ estado: string; detalle_error: string | null }>("SELECT estado, detalle_error FROM mensaje_whatsapp WHERE pedido_id = $1 AND tipo = 'Confirmación de pedido' ORDER BY id DESC LIMIT 1", [id]).catch(() => null),
+    plantillaAvisoPedido(id),
   ]);
   const pasos = p.tipo_entrega === "delivery" ? ["En preparación", "En delivery"] : ["En preparación", "Listo para retirar"];
   return (
@@ -80,7 +82,7 @@ export default async function DetallePedido({ params }: { params: Promise<{ id: 
                 {p.tipo_entrega === "delivery" && (
                   <label>
                     <span className="etiqueta-campo">Costo del delivery (C$)</span>
-                    <input name="costo_entrega" required inputMode="decimal" className="campo" />
+                    <input name="costo_entrega" required inputMode="decimal" maxLength={12} pattern=" *[0-9][0-9,]*(\.[0-9]{1,2})? *" title="Escribe solo números, con hasta dos decimales (por ejemplo 1300 o 1300.50)." className="campo" />
                   </label>
                 )}
               </Formulario>
@@ -92,7 +94,11 @@ export default async function DetallePedido({ params }: { params: Promise<{ id: 
               <h2 className="font-bold">Pago y entrega</h2>
               {p.estado_pago === "Pendiente" ? (
                 <>
-                  <p className="text-sm text-gris-600">La reserva vence el {fechaHora(p.reservado_hasta)} si no registras el pago verificado.</p>
+                  <p className="text-sm text-gris-600">
+                    {p.reservado_hasta
+                      ? `La reserva vence el ${fechaHora(p.reservado_hasta)} si no registras el pago verificado.`
+                      : "Delivery: la reserva no vence. Se mantiene hasta que entregues el pedido o lo canceles."}
+                  </p>
                   <Formulario accion={accionPagoPedido} boton={`Registrar pago de ${moneda(p.total_final)}`} claseBoton="btn-oro" confirmar="¿Verificaste el pago completo?" className="mt-3">
                     <input type="hidden" name="pedido_id" value={p.id} />
                   </Formulario>
@@ -117,6 +123,26 @@ export default async function DetallePedido({ params }: { params: Promise<{ id: 
             </section>
           )}
 
+          {p.estado === "Reservado" && avisoTexto && (
+            <section className="tarjeta p-5">
+              <h2 className="font-bold">Mensaje para la clienta</h2>
+              <p className="text-sm text-gris-600">
+                {aviso ? (
+                  <>
+                    Aviso por WhatsApp: <Etiqueta texto={aviso.estado} tono={aviso.estado === "Fallido" ? "err" : "info"} />
+                    {aviso.detalle_error ? ` (${aviso.detalle_error})` : ""}
+                  </>
+                ) : (
+                  "El aviso no se envió por la API (la clienta no aceptó mensajes o falló el envío)."
+                )}
+              </p>
+              <p className="mt-3 whitespace-pre-line rounded-xl bg-[#e7f6e7] p-3 text-sm">{avisoTexto.texto}</p>
+              <a href={enlaceWhatsApp(p.whatsapp, avisoTexto.texto)} target="_blank" className="btn-borde mt-3">
+                Enviarlo yo desde WhatsApp
+              </a>
+            </section>
+          )}
+
           {["Pendiente de confirmación", "Reservado"].includes(p.estado) && (
             <section className="tarjeta p-5">
               <h2 className="font-bold">Cancelar pedido</h2>
@@ -124,7 +150,7 @@ export default async function DetallePedido({ params }: { params: Promise<{ id: 
                 <input type="hidden" name="pedido_id" value={p.id} />
                 <label className="min-w-64 flex-1">
                   <span className="etiqueta-campo">Motivo</span>
-                  <input name="motivo" required className="campo" />
+                  <input name="motivo" maxLength={300} pattern=".*\p{L}.*" title="Debe llevar palabras, no solo números o símbolos." required className="campo" />
                 </label>
               </Formulario>
             </section>

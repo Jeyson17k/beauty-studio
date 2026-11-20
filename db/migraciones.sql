@@ -31,3 +31,14 @@ BEGIN
   END LOOP;
   ALTER TABLE codigo_cuenta ADD CONSTRAINT codigo_cuenta_proposito_check CHECK (proposito IN ('recuperar', 'cambiar', 'correo', 'usuario', 'recordar'));
 END $$;
+
+-- Archivar solicitudes rechazadas, canceladas o expiradas: se ocultan del centro de solicitudes y se conservan en la base de datos
+ALTER TABLE solicitud_actividad ADD COLUMN IF NOT EXISTS archivada_en TIMESTAMPTZ;
+
+-- Eliminar productos: sin historial se borran; con ventas o pedidos se retiran del inventario y del catálogo pero se conserva el historial
+ALTER TABLE producto ADD COLUMN IF NOT EXISTS eliminado_en TIMESTAMPTZ;
+
+-- Aviso al confirmar un pedido: el mensaje queda ligado al pedido
+ALTER TABLE mensaje_whatsapp ADD COLUMN IF NOT EXISTS pedido_id BIGINT;
+ALTER TABLE mensaje_whatsapp DROP CONSTRAINT IF EXISTS mensaje_whatsapp_tipo_check;
+ALTER TABLE mensaje_whatsapp ADD CONSTRAINT mensaje_whatsapp_tipo_check CHECK (tipo IN ('Cotización','Aviso de confirmación','Código de verificación','Confirmación de pedido'));

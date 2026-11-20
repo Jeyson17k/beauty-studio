@@ -64,7 +64,7 @@ export default async function Mensajes({ searchParams }: { searchParams: Promise
             <span className="etiqueta-campo">Tipo</span>
             <select name="tipo" defaultValue={sp.tipo ?? ""} className="campo">
               <option value="">Todos</option>
-              {["Cotización", "Aviso de confirmación", "Código de verificación"].map((e) => (
+              {["Cotización", "Aviso de confirmación", "Código de verificación", "Confirmación de pedido"].map((e) => (
                 <option key={e}>{e}</option>
               ))}
             </select>

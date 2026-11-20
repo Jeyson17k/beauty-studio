@@ -3,11 +3,28 @@
 // La venta y la salida de inventario se registran una sola vez, al cerrar el pedido (RN-25.7).
 import { q, q1, tx, pool } from "@/lib/db";
 import { ReglaError } from "@/lib/errores";
+import { monto, textoConLetras, textoOpcional } from "@/lib/validar";
 import { leerConfig } from "@/lib/config";
 import { moneda } from "@/lib/tiempo";
 import { auditar, notificar } from "./seguridad";
 import { salidaPorVenta } from "./inventario";
 import { identificar } from "./clientas";
+import { despachar } from "./whatsapp/servicio";
+import { Plantilla, plantillaPedidoDelivery, plantillaPedidoRetiro } from "./whatsapp/plantillas";
+
+let esquemaAviso: Promise<unknown> | null = null;
+/** Prepara la tabla de mensajes para el aviso de pedido confirmado, si la base todavía no lo tiene (una sola vez; no toca datos). */
+function asegurarAvisoPedido() {
+  esquemaAviso ??= (async () => {
+    await q("ALTER TABLE mensaje_whatsapp ADD COLUMN IF NOT EXISTS pedido_id BIGINT");
+    await q("ALTER TABLE mensaje_whatsapp DROP CONSTRAINT IF EXISTS mensaje_whatsapp_tipo_check");
+    await q("ALTER TABLE mensaje_whatsapp ADD CONSTRAINT mensaje_whatsapp_tipo_check CHECK (tipo IN ('Cotización','Aviso de confirmación','Código de verificación','Confirmación de pedido'))");
+  })().catch((e) => {
+    esquemaAviso = null;
+    throw e;
+  });
+  return esquemaAviso;
+}
 
 export type ItemCarrito = { producto_id: number; nombre: string; precio_venta: number; cantidad: number; subtotal: number; foto_url: string | null; disponible: boolean };
 
@@ -31,6 +48,15 @@ export async function verCarrito(clienteId: string): Promise<{ items: ItemCarrit
   return { items, total: Math.round(items.reduce((a, i) => a + Number(i.subtotal), 0) * 100) / 100 };
 }
 
+/** Unidades que la clienta lleva en su carrito (para el contador del encabezado). */
+export async function cantidadCarrito(clienteId: string) {
+  const r = await q1<{ n: number }>(
+    "SELECT COALESCE(sum(i.cantidad), 0)::int AS n FROM carrito c JOIN item_carrito i ON i.carrito_id = c.id JOIN producto p ON p.id = i.producto_id WHERE c.cliente_id = $1 AND p.activo AND p.visible_publico",
+    [clienteId],
+  );
+  return r!.n;
+}
+
 /** Agrega, cambia o quita (cantidad 0) un producto del carrito (RN-21.2). */
 export async function cambiarCarrito(clienteId: string, productoId: number, cantidad: number, sumar = false) {
   if (!Number.isInteger(cantidad) || cantidad < 0 || cantidad > 99) throw new ReglaError("Cantidad no válida.");
@@ -51,6 +77,8 @@ export async function cambiarCarrito(clienteId: string, productoId: number, cant
 /** CU-09: registra la solicitud de pedido sin apartar inventario (RN-22.7) y prepara el mensaje para WhatsApp (RF-23). */
 export async function crearPedido(clienteId: string, d: { entrega: "delivery" | "retiro"; direccion?: string; referencia?: string }) {
   if (d.entrega === "delivery" && !(d.direccion && d.direccion.trim().length >= 5)) throw new ReglaError("Escribe la dirección para el delivery", "RN-22.3");
+  if (d.entrega === "delivery") d.direccion = textoConLetras(d.direccion ?? "", "la dirección", 5, 200);
+  d.referencia = textoOpcional(d.referencia ?? "", "el punto de referencia", 200);
   const { items, total } = await verCarrito(clienteId);
   const validos = items.filter((i) => i.disponible);
   if (validos.length === 0) throw new ReglaError("Tu carrito está vacío.");
@@ -130,35 +158,88 @@ export async function mensajePedido(id: number) {
   return { texto, numero: cfg.whatsapp_negocio };
 }
 
-/** CU-30: Andrea confirma y reserva. Verifica el disponible y aparta sin descontar el físico (RN-24.1 a RN-24.7). */
+/**
+ * Mensaje que recibe la clienta cuando Andrea confirma su pedido: total y, según la entrega, plazo para pagar y retirar (retiro en el local)
+ * o costo del envío (delivery). Devuelve null si el pedido todavía no está confirmado.
+ */
+export async function plantillaAvisoPedido(id: number, db?: Parameters<typeof q1>[2]): Promise<Plantilla | null> {
+  const p = await pedido(id, db);
+  if (!p || p.estado === "Pendiente de confirmación" || p.total_final === null) return null;
+  if (p.tipo_entrega === "delivery") {
+    return plantillaPedidoDelivery({ nombre: p.clienta, pedidoId: p.id, productos: Number(p.subtotal_productos), envio: Number(p.costo_entrega ?? 0), total: Number(p.total_final), direccion: p.direccion ?? "la dirección indicada" });
+  }
+  const cfg = await leerConfig();
+  return plantillaPedidoRetiro({ nombre: p.clienta, pedidoId: p.id, total: Number(p.total_final), limite: p.reservado_hasta ?? new Date(), lugar: cfg.lugar_local });
+}
+
+export type AvisoPedido = { enviado: true } | { enviado: false; motivo: string };
+
+/** Envía el aviso de pedido confirmado por la API. Su fallo no revierte la confirmación; Andrea puede avisar a mano con el texto del panel. */
+async function avisarPedidoConfirmado(uid: number, id: number): Promise<AvisoPedido> {
+  await asegurarAvisoPedido();
+  const preparado = await tx(async (c) => {
+    const cli = await q1<{ cliente_id: string; whatsapp: string; acepta_whatsapp: boolean }>(
+      "SELECT c.id AS cliente_id, c.whatsapp, c.acepta_whatsapp FROM pedido p JOIN cliente c ON c.id = p.cliente_id WHERE p.id = $1",
+      [id],
+      c,
+    );
+    if (!cli) return null;
+    if (!cli.acepta_whatsapp) return { motivo: "La clienta no aceptó recibir mensajes por WhatsApp." } as const;
+    const p = await plantillaAvisoPedido(id, c);
+    if (!p) return null;
+    const m = await q1<{ id: number }>(
+      "INSERT INTO mensaje_whatsapp (cliente_id, pedido_id, tipo, plantilla, estado, origen) VALUES ($1,$2,'Confirmación de pedido',$3,'En cola','API') RETURNING id",
+      [cli.cliente_id, id, p.nombre],
+      c,
+    );
+    await auditar(c, uid, "Enviar aviso de pedido confirmado", "pedido", id, `mensaje ${m!.id}`);
+    return { mensajeId: m!.id, para: cli.whatsapp, plantilla: p };
+  });
+  if (!preparado) return { enviado: false, motivo: "No se pudo preparar el mensaje." };
+  if ("motivo" in preparado) return { enviado: false, motivo: String(preparado.motivo) };
+  const r = await despachar(preparado.mensajeId, preparado.para, preparado.plantilla);
+  return r.ok ? { enviado: true } : { enviado: false, motivo: r.error };
+}
+
+/**
+ * CU-30: Andrea confirma y reserva. Verifica el disponible y aparta sin descontar el físico (RN-24.1 a RN-24.7).
+ * El plazo de reserva (48 h) corre solo para retiro en el local: con delivery no hay plazo, porque Andrea hace la entrega.
+ * Al terminar, avisa a la clienta por WhatsApp (total y plazo o costo de envío).
+ */
 export async function confirmarYReservar(uid: number, id: number, costoEntrega: number | null) {
   const cfg = await leerConfig();
-  return tx(async (c) => {
+  const horas = await tx(async (c) => {
     const p = await pedido(id, c);
     if (!p) throw new ReglaError("El pedido no existe.");
     await q("SELECT 1 FROM pedido WHERE id = $1 FOR UPDATE", [id], c);
     if (p.estado !== "Pendiente de confirmación") throw new ReglaError(`El pedido ya está ${p.estado.toLowerCase()}.`);
     if (p.tipo_entrega === "delivery" && (costoEntrega === null || !(costoEntrega >= 0))) throw new ReglaError("Registra el costo del delivery", "RN-24.6");
+    if (p.tipo_entrega === "delivery") monto(costoEntrega as number, "el costo del delivery", { max: 10_000, permitirCero: true });
+    const plazoHoras = p.tipo_entrega === "retiro" ? Number(cfg.reserva_pedido_horas) : null;
     const items = await q<{ producto_id: number; cantidad: number }>("SELECT producto_id, cantidad FROM detalle_pedido WHERE pedido_id = $1 ORDER BY producto_id", [id], c);
     for (const i of items) {
       const pr = await q1<{ nombre: string; disp: number }>("SELECT nombre, stock_actual - stock_reservado AS disp FROM producto WHERE id = $1 FOR UPDATE", [i.producto_id], c);
       if (!pr || pr.disp < i.cantidad) throw new ReglaError(`No hay suficientes unidades de ${pr?.nombre ?? "un producto"} (disponibles: ${pr?.disp ?? 0})`, "RN-24.4");
       await q("UPDATE producto SET stock_reservado = stock_reservado + $2 WHERE id = $1", [i.producto_id, i.cantidad], c);
       await q(
-        "INSERT INTO reserva_inventario (pedido_id, producto_id, cantidad, estado, expira_en) VALUES ($1,$2,$3,'Activa', now() + make_interval(hours => $4))",
-        [id, i.producto_id, i.cantidad, Number(cfg.reserva_pedido_horas)],
+        "INSERT INTO reserva_inventario (pedido_id, producto_id, cantidad, estado, expira_en) VALUES ($1,$2,$3,'Activa', CASE WHEN $4::int IS NULL THEN NULL ELSE now() + make_interval(hours => $4::int) END)",
+        [id, i.producto_id, i.cantidad, plazoHoras],
         c,
       );
       await q("INSERT INTO movimiento_inventario (producto_id, pedido_id, usuario_id, tipo, cantidad, motivo) VALUES ($1,$2,$3,'Reserva',$4,$5)", [i.producto_id, id, uid, i.cantidad, `Pedido #${id}`], c);
     }
     const entrega = p.tipo_entrega === "delivery" ? Math.round((costoEntrega ?? 0) * 100) / 100 : 0;
     await q(
-      `UPDATE pedido SET estado = 'Reservado', costo_entrega = $2, total_final = subtotal_productos + $2, reservado_hasta = now() + make_interval(hours => $3), actualizado_en = now() WHERE id = $1`,
-      [id, entrega, Number(cfg.reserva_pedido_horas)],
+      `UPDATE pedido SET estado = 'Reservado', costo_entrega = $2, total_final = subtotal_productos + $2,
+         reservado_hasta = CASE WHEN $3::int IS NULL THEN NULL ELSE now() + make_interval(hours => $3::int) END, actualizado_en = now() WHERE id = $1`,
+      [id, entrega, plazoHoras],
       c,
     );
     await auditar(c, uid, "Confirmar pedido y reservar", "pedido", id, `entrega C$ ${entrega}`);
+    return plazoHoras;
   });
+  const aviso = await avisarPedidoConfirmado(uid, id).catch((e) => ({ enviado: false as const, motivo: (e as Error).message }));
+  return { horas, aviso };
 }
 
 async function liberarReservas(c: Parameters<typeof q1>[2], uid: number | null, id: number, motivo: string) {
@@ -218,6 +299,7 @@ export async function cambiarEntrega(uid: number, id: number, nuevo: string) {
 
 export async function cancelarPedido(uid: number, id: number, motivo: string) {
   if (!motivo || motivo.trim().length < 3) throw new ReglaError("Escribe el motivo.");
+  motivo = textoConLetras(motivo, "el motivo", 3, 300);
   return tx(async (c) => {
     const p = await pedido(id, c);
     if (!p) throw new ReglaError("El pedido no existe.");

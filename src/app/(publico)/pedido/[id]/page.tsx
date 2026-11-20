@@ -1,24 +1,25 @@
+import Link from "next/link";
 import { notFound } from "next/navigation";
 import { sesionClienta } from "@/lib/sesion";
-import { detallePedido, mensajePedido, pedido } from "@/modulos/pedidos";
+import { detallePedido, pedido } from "@/modulos/pedidos";
 import { moneda } from "@/lib/tiempo";
-import { enlaceWhatsApp } from "@/lib/telefono";
+import { mostrarWhatsApp } from "@/lib/telefono";
 import { Etiqueta } from "@/componentes/ui";
 import { EncabezadoPagina } from "@/componentes/publico";
 
 export const dynamic = "force-dynamic";
-export const metadata = { title: "Pedido listo" };
+export const metadata = { title: "Pedido enviado" };
 
-// P18 Pedido listo para WhatsApp (CU-09, RF-23): la clienta hace el envío final desde su WhatsApp (RN-23.3).
+// P18 Pedido enviado (CU-09): el pedido queda registrado en el panel de Andrea; ella coordina disponibilidad, entrega y pago por WhatsApp.
 export default async function PedidoListo({ params }: { params: Promise<{ id: string }> }) {
   const id = Number((await params).id);
   const s = await sesionClienta();
   const p = await pedido(id);
   if (!p || !s || p.cliente_id !== s.cid) notFound();
-  const [items, msg] = await Promise.all([detallePedido(id), mensajePedido(id)]);
+  const items = await detallePedido(id);
   return (
     <div>
-      <EncabezadoPagina titulo={`Pedido #${p.id} registrado`}>
+      <EncabezadoPagina titulo={`Pedido #${p.id} enviado`}>
         <div className="mt-3">
           <Etiqueta texto={p.estado} tono="info" />
         </div>
@@ -45,16 +46,16 @@ export default async function PedidoListo({ params }: { params: Promise<{ id: st
       <p className="mt-3 text-sm">
         Entrega: {p.tipo_entrega === "delivery" ? `delivery a ${p.direccion} (costo por confirmar)` : "retiro en el local"}.
       </p>
-      <p className="mt-4 text-[15px]">Envía el pedido a Andrea por WhatsApp. Ella confirmará la disponibilidad, el costo del delivery y la forma de pago.</p>
-      {msg && (
-        <>
-          <p className="mt-3 whitespace-pre-line rounded-xl bg-[#e7f6e7] p-3 text-sm">{msg.texto}</p>
-          <a href={enlaceWhatsApp(msg.numero, msg.texto)} target="_blank" className="btn-primario mt-4 w-full">
-            Enviar por WhatsApp
-          </a>
-        </>
-      )}
-      <p className="mt-3 text-xs text-gris-600">Preparar o enviar el mensaje no aparta los productos.</p>
+      <div className="mt-4 rounded-2xl bg-ok-100 px-4 py-3 text-[15px] text-ok-700">
+        <p className="font-semibold">Tu pedido ya llegó al panel de Andrea.</p>
+        <p className="mt-1 text-sm">
+          Ella revisará la disponibilidad y te escribirá por WhatsApp al {mostrarWhatsApp(s.whatsapp)} para confirmar {p.tipo_entrega === "delivery" ? "el costo del delivery y la forma de pago" : "la forma de pago y cuándo puedes retirarlo"}.
+        </p>
+      </div>
+      <p className="mt-3 text-xs text-gris-600">Enviar el pedido no aparta los productos ni cobra nada. Guarda el número de pedido: #{p.id}.</p>
+      <Link href="/catalogo" className="btn-borde mt-4 w-full">
+        Seguir viendo productos
+      </Link>
       </div>
     </div>
   );

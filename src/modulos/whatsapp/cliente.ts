@@ -70,36 +70,42 @@ export async function enviarPlantilla(para: string, p: Plantilla): Promise<{ idE
   const components: unknown[] = p.parametros.length ? [{ type: "body", parameters: p.parametros.map((text) => ({ type: "text", text })) }] : [];
   if (p.codigo) components.push({ type: "button", sub_type: "url", index: "0", parameters: [{ type: "text", text: p.codigo }] });
 
-  let res: Response;
+  const publicar = async (carga: Record<string, unknown>): Promise<{ idExterno: string }> => {
+    let res: Response;
+    try {
+      res = await fetch(`https://graph.facebook.com/${version}/${phoneId}/messages`, {
+        method: "POST",
+        headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+        body: JSON.stringify({ messaging_product: "whatsapp", recipient_type: "individual", to: destino.replace("+", ""), ...carga }),
+        signal: AbortSignal.timeout(15_000),
+      });
+    } catch (e) {
+      throw new ErrorWhatsApp("RED", `No se pudo conectar con la API de WhatsApp: ${(e as Error).message}`.slice(0, 200));
+    }
+    const cuerpo = (await res.json().catch(() => ({}))) as {
+      messages?: { id: string }[];
+      error?: { code?: number; message?: string; error_data?: { details?: string } };
+    };
+    if (!res.ok || !cuerpo.messages?.[0]?.id) {
+      const err = cuerpo.error;
+      throw new ErrorWhatsApp(String(err?.code ?? res.status), (err?.error_data?.details || err?.message || "Error desconocido").slice(0, 200));
+    }
+    return { idExterno: cuerpo.messages[0].id };
+  };
+
   try {
-    res = await fetch(`https://graph.facebook.com/${version}/${phoneId}/messages`, {
-      method: "POST",
-      headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
-      body: JSON.stringify({
-        messaging_product: "whatsapp",
-        recipient_type: "individual",
-        to: destino.replace("+", ""),
-        type: "template",
-        template: {
-          name: p.nombre,
-          language: { code: p.idioma || process.env.WHATSAPP_IDIOMA || "es" },
-          ...(components.length ? { components } : {}),
-        },
-      }),
-      signal: AbortSignal.timeout(15_000),
+    return await publicar({
+      type: "template",
+      template: { name: p.nombre, language: { code: p.idioma || process.env.WHATSAPP_IDIOMA || "es" }, ...(components.length ? { components } : {}) },
     });
   } catch (e) {
-    throw new ErrorWhatsApp("RED", `No se pudo conectar con la API de WhatsApp: ${(e as Error).message}`.slice(0, 200));
+    // Código de verificación sin plantilla de autenticación (la cuenta de prueba de Meta no permite crearla, error 132001):
+    // se envía como texto, que WhatsApp entrega solo si la clienta escribió al número del negocio en las últimas 24 horas.
+    // Si tampoco se puede entregar, el sistema aplica el aviso de RN-18.10.
+    // Lo mismo para el aviso de pedido confirmado mientras sus plantillas no estén aprobadas por Meta.
+    if ((p.codigo || p.tipo === "Confirmación de pedido") && e instanceof ErrorWhatsApp && e.codigo === "132001") return publicar({ type: "text", text: { body: p.texto, preview_url: false } });
+    throw e;
   }
-  const cuerpo = (await res.json().catch(() => ({}))) as {
-    messages?: { id: string }[];
-    error?: { code?: number; message?: string; error_data?: { details?: string } };
-  };
-  if (!res.ok || !cuerpo.messages?.[0]?.id) {
-    const err = cuerpo.error;
-    throw new ErrorWhatsApp(String(err?.code ?? res.status), (err?.error_data?.details || err?.message || "Error desconocido").slice(0, 200));
-  }
-  return { idExterno: cuerpo.messages[0].id };
 }
 
 /** Verifica la firma X-Hub-Signature-256 del webhook (HMAC SHA-256 con el secreto de la aplicación). */

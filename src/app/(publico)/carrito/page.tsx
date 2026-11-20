@@ -3,12 +3,10 @@ import { redirect } from "next/navigation";
 import { sesionClienta } from "@/lib/sesion";
 import { verCarrito } from "@/modulos/pedidos";
 import { moneda } from "@/lib/tiempo";
-import { Formulario } from "@/componentes/Formulario";
-import { CamposLugar } from "@/componentes/CamposPublicos";
 import { Vacio } from "@/componentes/ui";
 import { FotoProducto } from "@/componentes/FotoProducto";
 import { EncabezadoPagina } from "@/componentes/publico";
-import { accionCambiarCantidad, accionCrearPedido } from "../acciones";
+import { accionCambiarCantidad } from "../acciones";
 
 export const dynamic = "force-dynamic";
 export const metadata = { title: "Carrito" };
@@ -56,6 +54,11 @@ export default async function Carrito() {
                     </form>
                   ))}
                   <span className="w-6 text-center text-sm font-semibold">{i.cantidad}</span>
+                  <form action={accionCambiarCantidad}>
+                    <input type="hidden" name="producto_id" value={i.producto_id} />
+                    <input type="hidden" name="cantidad" value={0} />
+                    <button className="ml-1 text-xs font-semibold text-error-700 hover:underline">Quitar</button>
+                  </form>
                 </div>
               </li>
             ))}
@@ -71,12 +74,15 @@ export default async function Carrito() {
             </p>
           </div>
           </div>
-          <div className="tarjeta p-5 lg:sticky lg:top-24">
-            <h2 className="font-bold">Entrega</h2>
-            <p className="ayuda">El pago y el costo del delivery se acuerdan con Andrea por WhatsApp; aquí no se paga nada.</p>
-            <Formulario accion={accionCrearPedido} boton="Preparar pedido para WhatsApp" botonAncho className="mt-3 space-y-3">
-              <CamposLugar etiquetas={["Retiro en el local", "Delivery"]} />
-            </Formulario>
+          <div className="tarjeta space-y-3 p-5 lg:sticky lg:top-24">
+            <h2 className="font-bold">¿Qué quieres hacer?</h2>
+            <Link href="/catalogo" className="btn-borde w-full">
+              Seguir viendo el catálogo
+            </Link>
+            <Link href="/carrito/finalizar" className="btn-primario w-full">
+              Finalizar pedido
+            </Link>
+            <p className="ayuda">Aquí no se paga nada. El pago y el delivery se acuerdan con Andrea después de recibir tu pedido.</p>
           </div>
         </div>
       )}

@@ -4,6 +4,7 @@ import { Formulario } from "@/componentes/Formulario";
 import { CampoFoto } from "@/componentes/CampoFoto";
 import { EncabezadoPanel, Etiqueta, Vacio } from "@/componentes/ui";
 import { PestanasPanel, PESTANAS_INVENTARIO } from "@/componentes/PestanasPanel";
+import { BotonEliminarProducto } from "@/componentes/BotonEliminarProducto";
 import { accionAjuste, accionEntrada, accionGuardarProducto } from "../../acciones";
 
 export const dynamic = "force-dynamic";
@@ -17,7 +18,7 @@ function CamposProducto({ p, cats }: { p?: P; cats: { id: number; nombre: string
       {p && <input type="hidden" name="id" value={p.id} />}
       <label className="sm:col-span-2">
         <span className="etiqueta-campo">Nombre</span>
-        <input name="nombre" required defaultValue={p?.nombre} className="campo" />
+        <input name="nombre" required minLength={2} maxLength={80} pattern=".*\p{L}.*" title="Debe llevar palabras, no solo números o símbolos." defaultValue={p?.nombre} className="campo" />
       </label>
       <label>
         <span className="etiqueta-campo">Categoría</span>
@@ -35,11 +36,11 @@ function CamposProducto({ p, cats }: { p?: P; cats: { id: number; nombre: string
       </label>
       <label>
         <span className="etiqueta-campo">Precio de venta (C$)</span>
-        <input name="precio_venta" required inputMode="decimal" defaultValue={p?.precio_venta} className="campo" />
+        <input name="precio_venta" required inputMode="decimal" maxLength={12} pattern=" *[0-9][0-9,]*(\.[0-9]{1,2})? *" title="Escribe solo números, con hasta dos decimales (por ejemplo 1300 o 1300.50)." defaultValue={p?.precio_venta} className="campo" />
       </label>
       <label>
         <span className="etiqueta-campo">Stock mínimo</span>
-        <input name="stock_minimo" type="number" min={0} defaultValue={p?.stock_minimo ?? 2} className="campo" />
+        <input name="stock_minimo" type="number" min={0} max={10000} step={1} defaultValue={p?.stock_minimo ?? 2} className="campo" />
       </label>
       <CampoFoto actual={p?.foto_url} nombre={p?.nombre} />
       <label className="flex items-center gap-2 text-sm">
@@ -74,6 +75,7 @@ export default async function Productos() {
                   <th>Disponible</th>
                   <th>Costo prom.</th>
                   <th>Estado</th>
+                  <th></th>
                 </tr>
               </thead>
               <tbody>
@@ -90,6 +92,9 @@ export default async function Productos() {
                     <td>{moneda(p.costo_promedio)}</td>
                     <td className="space-x-1">
                       {!p.activo ? <Etiqueta texto="Inactivo" tono="n" /> : p.disponible <= 0 ? <Etiqueta texto="Agotado" tono="err" /> : p.disponible <= p.stock_minimo ? <Etiqueta texto="Bajo stock" tono="warn" /> : <Etiqueta texto="OK" tono="ok" />}
+                    </td>
+                    <td>
+                      <BotonEliminarProducto id={p.id} nombre={p.nombre} existencias={p.stock_actual} />
                     </td>
                   </tr>
                 ))}
@@ -115,15 +120,15 @@ export default async function Productos() {
                 </label>
                 <label>
                   <span className="etiqueta-campo">Cantidad</span>
-                  <input name="cantidad" type="number" min={1} required className="campo" />
+                  <input name="cantidad" type="number" min={1} max={10000} step={1} required className="campo" />
                 </label>
                 <label>
                   <span className="etiqueta-campo">Costo unitario de compra (C$)</span>
-                  <input name="costo_unitario" required inputMode="decimal" className="campo" />
+                  <input name="costo_unitario" required inputMode="decimal" maxLength={12} pattern=" *[0-9][0-9,]*(\.[0-9]{1,2})? *" title="Escribe solo números, con hasta dos decimales (por ejemplo 1300 o 1300.50)." className="campo" />
                 </label>
                 <label className="sm:col-span-2">
                   <span className="etiqueta-campo">Proveedor o nota</span>
-                  <input name="motivo" className="campo" placeholder="Compra a proveedor" />
+                  <input name="motivo" maxLength={150} pattern=".*\p{L}.*" title="Debe llevar palabras, no solo números o símbolos." className="campo" placeholder="Compra a proveedor" />
                 </label>
               </Formulario>
             </section>
@@ -149,11 +154,11 @@ export default async function Productos() {
                 </label>
                 <label>
                   <span className="etiqueta-campo">Unidades (+ suma, − resta)</span>
-                  <input name="cantidad" type="number" required className="campo" placeholder="-1" />
+                  <input name="cantidad" type="number" required min={-10000} max={10000} step={1} className="campo" placeholder="-1" />
                 </label>
                 <label className="sm:col-span-2">
                   <span className="etiqueta-campo">Motivo (obligatorio)</span>
-                  <input name="motivo" required minLength={3} className="campo" />
+                  <input name="motivo" maxLength={150} pattern=".*\p{L}.*" title="Debe llevar palabras, no solo números o símbolos." required minLength={3} className="campo" />
                 </label>
               </Formulario>
             </section>

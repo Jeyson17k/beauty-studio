@@ -1,5 +1,7 @@
 import Link from "next/link";
-import { catalogoPublico, categoriasProducto } from "@/modulos/inventario";
+import { catalogoPublico, categoriasProducto, producto } from "@/modulos/inventario";
+import { cantidadCarrito } from "@/modulos/pedidos";
+import { sesionClienta } from "@/lib/sesion";
 import { moneda } from "@/lib/tiempo";
 import { Vacio } from "@/componentes/ui";
 import { FotoProducto } from "@/componentes/FotoProducto";
@@ -9,9 +11,12 @@ export const dynamic = "force-dynamic";
 export const metadata = { title: "Catálogo" };
 
 // P14 Catálogo (CU-07, RF-20): productos activos con búsqueda y filtro; sin existencias exactas (RN-20.3).
-export default async function Catalogo({ searchParams }: { searchParams: Promise<{ q?: string; cat?: string }> }) {
+export default async function Catalogo({ searchParams }: { searchParams: Promise<{ q?: string; cat?: string; agregado?: string }> }) {
   const sp = await searchParams;
-  const [lista, cats] = await Promise.all([catalogoPublico({ texto: sp.q, categoria: Number(sp.cat) || undefined }), categoriasProducto()]);
+  const [lista, cats, clienta] = await Promise.all([catalogoPublico({ texto: sp.q, categoria: Number(sp.cat) || undefined }), categoriasProducto(), sesionClienta()]);
+  // Aviso después de agregar un producto: se puede seguir eligiendo o ir al carrito
+  const agregado = sp.agregado && clienta ? await producto(Number(sp.agregado)) : null;
+  const enCarrito = agregado && clienta ? await cantidadCarrito(clienta.cid) : 0;
   return (
     <div>
       <EncabezadoPagina titulo="Productos de belleza" subtitulo="Arma tu pedido y envíaselo a Andrea por WhatsApp. Retiro en el local o delivery.">
@@ -21,6 +26,16 @@ export default async function Catalogo({ searchParams }: { searchParams: Promise
         </form>
       </EncabezadoPagina>
       <div className="contenedor py-6 md:py-10">
+        {agregado && (
+          <div id="aviso-carrito" role="status" className="mb-5 flex scroll-mt-24 flex-col gap-3 rounded-2xl bg-ok-100 px-4 py-3 text-sm text-ok-700 sm:flex-row sm:items-center sm:justify-between">
+            <span>
+              <strong>{agregado.nombre}</strong> se agregó a tu carrito. Sigue eligiendo productos o finaliza tu pedido ({enCarrito} {enCarrito === 1 ? "producto" : "productos"} en total).
+            </span>
+            <Link href="/carrito" className="btn-primario px-4 py-2 text-xs">
+              Ver mi carrito
+            </Link>
+          </div>
+        )}
         <div className="flex gap-2 overflow-x-auto pb-1 text-sm">
           <Link href="/catalogo" className={`whitespace-nowrap rounded-full border px-4 py-1.5 ${!sp.cat ? "border-negro-900 bg-negro-900 text-oro-200" : "border-linea-200 bg-white"}`}>
             Todos

@@ -2,7 +2,7 @@
 // El texto armado aquí se usa en el modo simulado, en la vista previa del panel y en el envío manual (RN-11.7).
 import { fechaLarga, montoTexto } from "@/lib/tiempo";
 
-export type TipoMensaje = "Cotización" | "Aviso de confirmación" | "Código de verificación" | "Prueba";
+export type TipoMensaje = "Cotización" | "Aviso de confirmación" | "Código de verificación" | "Confirmación de pedido" | "Prueba";
 
 export type Plantilla = {
   tipo: TipoMensaje;
@@ -38,6 +38,34 @@ export function plantillaConfirmacion(d: { nombre: string; actividad: string; in
     texto:
       `Hola ${p[0]}, tu ${p[1]} quedó confirmado para el ${p[2]}. Recibimos tu anticipo de C$ ${p[3]}; el saldo de C$ ${p[4]} se paga el día de la atención. ` +
       `Lugar: ${p[5]}. Si necesitas cambiar la fecha, escríbeme por este chat. ¡Te espero!`,
+  };
+}
+
+/**
+ * Aviso al confirmar un pedido de productos (RF-24). Hay dos textos porque Meta no permite que una plantilla cambie de redacción:
+ * retiro en el local (con fecha límite para pagar y retirar) y delivery (con costo de envío y sin plazo, porque Andrea lo entrega).
+ */
+export function plantillaPedidoRetiro(d: { nombre: string; pedidoId: number; total: number; limite: Date; lugar: string }): Plantilla {
+  const p = [d.nombre.split(" ")[0], String(d.pedidoId), montoTexto(d.total), fechaLarga(d.limite), d.lugar].map(limpio);
+  return {
+    tipo: "Confirmación de pedido",
+    nombre: process.env.WHATSAPP_PLANTILLA_PEDIDO_RETIRO || "pedido_confirmado_retiro_v1",
+    parametros: p,
+    texto:
+      `Hola ${p[0]}, tu pedido #${p[1]} de Beauty Studio está confirmado. Total a pagar: C$ ${p[2]}. Tus productos quedan apartados hasta el ${p[3].replace(/\.$/, "")}. ` +
+      `Para conservarlos, realiza el pago y retíralos en ${p[4]} antes de esa fecha. Cualquier duda, escríbeme por este chat.`,
+  };
+}
+
+export function plantillaPedidoDelivery(d: { nombre: string; pedidoId: number; productos: number; envio: number; total: number; direccion: string }): Plantilla {
+  const p = [d.nombre.split(" ")[0], String(d.pedidoId), montoTexto(d.productos), montoTexto(d.envio), montoTexto(d.total), d.direccion].map(limpio);
+  return {
+    tipo: "Confirmación de pedido",
+    nombre: process.env.WHATSAPP_PLANTILLA_PEDIDO_DELIVERY || "pedido_confirmado_delivery_v1",
+    parametros: p,
+    texto:
+      `Hola ${p[0]}, tu pedido #${p[1]} de Beauty Studio está confirmado. Productos: C$ ${p[2]}; delivery: C$ ${p[3]}; total: C$ ${p[4]}. ` +
+      `Te lo llevaré a ${p[5]} y coordinamos el pago por este chat. Gracias por tu compra.`,
   };
 }
 

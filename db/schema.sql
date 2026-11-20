@@ -66,6 +66,7 @@ CREATE TABLE solicitud_actividad (
   motivo_cierre VARCHAR(150),
   origen_cancelacion VARCHAR(10),
   registro_directo BOOLEAN NOT NULL DEFAULT false,
+  archivada_en TIMESTAMPTZ,
   creado_en TIMESTAMPTZ NOT NULL DEFAULT now(),
   actualizado_en TIMESTAMPTZ NOT NULL DEFAULT now(),
   PRIMARY KEY (id),
@@ -162,6 +163,7 @@ CREATE TABLE mensaje_whatsapp (
   cliente_id UUID NOT NULL,
   solicitud_id BIGINT,
   cotizacion_id BIGINT,
+  pedido_id BIGINT,
   tipo VARCHAR(25) NOT NULL,
   plantilla VARCHAR(60) NOT NULL,
   id_externo VARCHAR(100) UNIQUE,
@@ -174,7 +176,7 @@ CREATE TABLE mensaje_whatsapp (
   PRIMARY KEY (id),
   CHECK (estado IN ('En cola', 'Enviado', 'Entregado', 'Leído', 'Fallido')),
   CHECK (origen IN ('API','manual')),
-  CHECK (tipo IN ('Cotización','Aviso de confirmación','Código de verificación'))
+  CHECK (tipo IN ('Cotización','Aviso de confirmación','Código de verificación','Confirmación de pedido'))
 );
 
 CREATE TABLE evento_mensaje_whatsapp (
@@ -220,6 +222,7 @@ CREATE TABLE producto (
   stock_minimo INT NOT NULL DEFAULT 0,
   visible_publico BOOLEAN NOT NULL DEFAULT true,
   activo BOOLEAN NOT NULL DEFAULT true,
+  eliminado_en TIMESTAMPTZ,
   PRIMARY KEY (id),
   CHECK (stock_actual >= 0 AND stock_reservado >= 0 AND stock_reservado <= stock_actual)
 );

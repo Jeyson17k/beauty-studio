@@ -3,26 +3,27 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { aResultado, ReglaError } from "@/lib/errores";
+import { leerNumero, monto, textoConLetras, textoOpcional } from "@/lib/validar";
+import { normalizarWhatsApp } from "@/lib/telefono";
 import { desdeLocal, fechaHora, moneda } from "@/lib/tiempo";
 import { abrirSesionAdmin, cerrarPerfilClienta, cerrarSesionAdmin, sesionAdmin } from "@/lib/sesion";
 import { q, pool } from "@/lib/db";
 import { CONFIG_INICIAL, ClaveConfig } from "@/lib/config";
 import { auditar, marcarLeidas, validarCredenciales } from "@/modulos/seguridad";
-import { guardarCotizacion, rechazarOCancelar, registroDirecto, reprogramar, rechazarReprogramacion } from "@/modulos/solicitudes";
+import { archivarSolicitud, guardarCotizacion, rechazarOCancelar, registroDirecto, reprogramar, rechazarReprogramacion } from "@/modulos/solicitudes";
 import { enviarAvisoConfirmacion, enviarCotizacion, registrarAvisoManual, registrarEnvioManual } from "@/modulos/whatsapp/servicio";
 import { cargarComprobante, declararExpiracion, rechazarComprobante, registrarAtencion, registrarSaldo, validarAnticipoYConfirmar } from "@/modulos/pagos";
 import { cancelarSesion, guardarCurso, guardarServicio, habilitarSesion, marcarSesionRealizada, programarSesion } from "@/modulos/catalogo";
 import { ejecutarTareas } from "@/modulos/planificador";
 import { guardarArchivo } from "@/lib/almacenamiento";
 import { cambiarEntrega, cancelarPedido, confirmarYReservar, pedidoPorAndrea, registrarPagoPedido } from "@/modulos/pedidos";
-import { eliminarGasto, guardarProducto, registrarAjuste, registrarEntrada, registrarGasto, registrarVentaDirecta } from "@/modulos/inventario";
+import { eliminarGasto, eliminarProducto, guardarProducto, registrarAjuste, registrarEntrada, registrarGasto, registrarVentaDirecta } from "@/modulos/inventario";
 import type { EstadoForm } from "@/componentes/Formulario";
 
 const txt = (fd: FormData, k: string) => String(fd.get(k) ?? "").trim();
-const num = (fd: FormData, k: string) => {
-  const v = txt(fd, k).replace(/,/g, "");
-  return v === "" ? NaN : Number(v);
-};
+const num = (fd: FormData, k: string) => leerNumero(txt(fd, k));
+/** Entero escrito en un campo: «3» sí; «3.5», «abc» o vacío dan NaN y la regla del módulo lo rechaza. */
+const ent = (fd: FormData, k: string) => { const v = txt(fd, k); return /^-?\d+$/.test(v) ? Number(v) : NaN; };
 
 async function uid() {
   const s = await sesionAdmin();
@@ -141,6 +142,14 @@ export async function accionRechazarCancelar(_: EstadoForm, fd: FormData) {
   }, ["/panel/solicitudes", "/panel/agenda"]);
 }
 
+export async function accionArchivarSolicitud(_: EstadoForm, fd: FormData) {
+  return ejecutar(async () => {
+    const archivar = txt(fd, "archivar") !== "no";
+    await archivarSolicitud(await uid(), Number(fd.get("solicitud_id")), archivar);
+    return archivar ? "Solicitud archivada. Ya no aparece en la lista; búscala en «Archivadas»." : "Solicitud restaurada.";
+  }, ["/panel/solicitudes"]);
+}
+
 // ---------- A11 Registro directo (CU-24) ----------
 export async function accionRegistroDirecto(_: EstadoForm, fd: FormData): Promise<EstadoForm> {
   let id: number;
@@ -216,12 +225,12 @@ export async function accionSaldo(_: EstadoForm, fd: FormData) {
 // ---------- A15 Servicios y A16 Cursos y sesiones (CU-25, CU-26) ----------
 export async function accionGuardarServicio(_: EstadoForm, fd: FormData) {
   return ejecutar(async () => {
-    const nombre = txt(fd, "nombre");
-    if (nombre.length < 3) throw new ReglaError("Escribe el nombre del servicio.");
+    const nombre = textoConLetras(txt(fd, "nombre"), "el nombre del servicio", 3, 80);
+    const descripcion = textoOpcional(txt(fd, "descripcion"), "la descripción", 500);
     const precio = txt(fd, "precio_base");
     await guardarServicio(await uid(), {
-      id: Number(fd.get("id")) || undefined, nombre, descripcion: txt(fd, "descripcion") || nombre,
-      precio_base: precio ? Number(precio) : null, imagen_url: txt(fd, "imagen_url") || null, activo: fd.get("activo") === "on",
+      id: Number(fd.get("id")) || undefined, nombre, descripcion: descripcion || nombre,
+      precio_base: precio ? monto(leerNumero(precio), "el precio de referencia", { max: 100_000 }) : null, imagen_url: txt(fd, "imagen_url") || null, activo: fd.get("activo") === "on",
     });
     return "Servicio guardado.";
   }, ["/", "/servicios"]);
@@ -229,12 +238,12 @@ export async function accionGuardarServicio(_: EstadoForm, fd: FormData) {
 
 export async function accionGuardarCurso(_: EstadoForm, fd: FormData) {
   return ejecutar(async () => {
-    const nombre = txt(fd, "nombre");
-    if (nombre.length < 3) throw new ReglaError("Escribe el nombre del curso.");
+    const nombre = textoConLetras(txt(fd, "nombre"), "el nombre del curso", 3, 80);
+    const descripcion = textoOpcional(txt(fd, "descripcion"), "la descripción", 500);
     const precio = txt(fd, "precio_base");
     await guardarCurso(await uid(), {
-      id: Number(fd.get("id")) || undefined, nombre, descripcion: txt(fd, "descripcion") || nombre,
-      modalidad: txt(fd, "modalidad") === "grupal" ? "grupal" : "individual", precio_base: precio ? Number(precio) : null, activo: fd.get("activo") === "on",
+      id: Number(fd.get("id")) || undefined, nombre, descripcion: descripcion || nombre,
+      modalidad: txt(fd, "modalidad") === "grupal" ? "grupal" : "individual", precio_base: precio ? monto(leerNumero(precio), "el precio de referencia", { max: 100_000 }) : null, activo: fd.get("activo") === "on",
     });
     return "Curso guardado.";
   }, ["/cursos"]);
@@ -279,7 +288,9 @@ export async function accionGuardarConfig(_: EstadoForm, fd: FormData) {
     for (const clave of Object.keys(CONFIG_INICIAL) as ClaveConfig[]) {
       const v = txt(fd, clave);
       if (!v) continue;
-      if (!["datos_pago", "lugar_local", "whatsapp_negocio"].includes(clave) && !(Number(v) > 0)) throw new ReglaError(`Valor no válido para ${clave}.`);
+      if (!["datos_pago", "lugar_local", "whatsapp_negocio"].includes(clave) && !(leerNumero(v) > 0)) throw new ReglaError(`Valor no válido para ${clave}: escribe un número mayor que cero.`);
+      if (clave === "whatsapp_negocio" && !normalizarWhatsApp(v)) throw new ReglaError("El WhatsApp del negocio no es válido (ejemplo: 8888 1234).");
+      if (clave === "datos_pago" || clave === "lugar_local") textoConLetras(v, clave === "datos_pago" ? "los datos de pago" : "el lugar del local", 5, 100);
       await q(
         "INSERT INTO configuracion (clave, valor, descripcion) VALUES ($1,$2,$3) ON CONFLICT (clave) DO UPDATE SET valor = EXCLUDED.valor",
         [clave, v.slice(0, 100), CONFIG_INICIAL[clave].descripcion],
@@ -302,8 +313,11 @@ export async function accionEjecutarPlanificador() {
 export async function accionConfirmarPedido(_: EstadoForm, fd: FormData) {
   return ejecutar(async () => {
     const costo = txt(fd, "costo_entrega");
-    await confirmarYReservar(await uid(), Number(fd.get("pedido_id")), costo === "" ? null : Number(costo));
-    return "Pedido confirmado. Las unidades quedaron reservadas por 48 horas.";
+    const r = await confirmarYReservar(await uid(), Number(fd.get("pedido_id")), costo === "" ? null : Number(costo));
+    const reserva = r.horas ? `Las unidades quedaron reservadas por ${r.horas} horas.` : "Las unidades quedaron reservadas hasta la entrega (delivery sin plazo).";
+    return r.aviso.enviado
+      ? `Pedido confirmado. ${reserva} Le enviamos el aviso a la clienta por WhatsApp.`
+      : `Pedido confirmado. ${reserva} No se pudo enviar el aviso por WhatsApp (${r.aviso.motivo}). Avísale tú con el mensaje que aparece abajo.`;
   }, ["/panel/pedidos", "/panel/productos"]);
 }
 
@@ -338,23 +352,27 @@ export async function accionGuardarProducto(_: EstadoForm, fd: FormData) {
     if (archivo instanceof File && archivo.size > 0) foto_url = `/api/imagenes/${(await guardarArchivo(archivo, "productos")).split("/")[1]}`;
     await guardarProducto(uidAdmin, {
       id: Number(fd.get("id")) || undefined, categoria_id: Number(fd.get("categoria_id")), nombre: txt(fd, "nombre"), descripcion: txt(fd, "descripcion") || null,
-      foto_url, precio_venta: num(fd, "precio_venta"), stock_minimo: Number(txt(fd, "stock_minimo") || 0),
+      foto_url, precio_venta: num(fd, "precio_venta"), stock_minimo: txt(fd, "stock_minimo") === "" ? 0 : ent(fd, "stock_minimo"),
       visible_publico: fd.get("visible_publico") === "on", activo: fd.get("activo") === "on",
     });
     return "Producto guardado.";
   }, ["/panel/productos", "/catalogo"]);
 }
 
+export async function accionEliminarProducto(_: EstadoForm, fd: FormData) {
+  return ejecutar(async () => eliminarProducto(await uid(), Number(fd.get("producto_id"))), ["/panel/productos", "/panel/ventas", "/catalogo", "/carrito"]);
+}
+
 export async function accionEntrada(_: EstadoForm, fd: FormData) {
   return ejecutar(async () => {
-    await registrarEntrada(await uid(), Number(fd.get("producto_id")), Number(fd.get("cantidad")), num(fd, "costo_unitario"), txt(fd, "motivo"));
+    await registrarEntrada(await uid(), Number(fd.get("producto_id")), ent(fd, "cantidad"), num(fd, "costo_unitario"), txt(fd, "motivo"));
     return "Entrada registrada.";
   }, ["/panel/productos"]);
 }
 
 export async function accionAjuste(_: EstadoForm, fd: FormData) {
   return ejecutar(async () => {
-    await registrarAjuste(await uid(), Number(fd.get("producto_id")), Number(fd.get("cantidad")), txt(fd, "tipo") === "Daño" ? "Daño" : "Corrección", txt(fd, "motivo"));
+    await registrarAjuste(await uid(), Number(fd.get("producto_id")), ent(fd, "cantidad"), txt(fd, "tipo") === "Daño" ? "Daño" : "Corrección", txt(fd, "motivo"));
     return "Ajuste registrado.";
   }, ["/panel/productos"]);
 }

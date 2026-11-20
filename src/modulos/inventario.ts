@@ -3,12 +3,23 @@
 import type { PoolClient } from "pg";
 import { q, q1, tx, Db } from "@/lib/db";
 import { ReglaError } from "@/lib/errores";
+import { entero, monto, textoConLetras, textoOpcional } from "@/lib/validar";
 import { auditar } from "./seguridad";
 
 export type Producto = {
   id: number; categoria_id: number; categoria: string; nombre: string; descripcion: string | null; foto_url: string | null; precio_venta: number;
   stock_actual: number; stock_reservado: number; stock_minimo: number; visible_publico: boolean; activo: boolean; disponible: number; costo_promedio: number | null;
 };
+
+let columnaEliminado: Promise<unknown> | null = null;
+/** Agrega la columna de «eliminado» si la base de datos todavía no la tiene (una sola vez; los datos no se tocan). */
+function asegurarEliminado() {
+  columnaEliminado ??= q("ALTER TABLE producto ADD COLUMN IF NOT EXISTS eliminado_en TIMESTAMPTZ").catch((e) => {
+    columnaEliminado = null;
+    throw e;
+  });
+  return columnaEliminado;
+}
 
 const SELECT_PRODUCTO = `
   SELECT p.*, cp.nombre AS categoria, (p.stock_actual - p.stock_reservado) AS disponible,
@@ -30,15 +41,23 @@ export async function catalogoPublico(f: { texto?: string; categoria?: number } 
   );
 }
 
-export const productos = () => q<Producto>(`${SELECT_PRODUCTO} ORDER BY p.activo DESC, (p.stock_actual - p.stock_reservado) <= p.stock_minimo DESC, p.nombre`);
+export async function productos() {
+  await asegurarEliminado();
+  return q<Producto>(`${SELECT_PRODUCTO} WHERE p.eliminado_en IS NULL ORDER BY p.activo DESC, (p.stock_actual - p.stock_reservado) <= p.stock_minimo DESC, p.nombre`);
+}
 export const producto = (id: number, db?: Db) => q1<Producto>(`${SELECT_PRODUCTO} WHERE p.id = $1`, [id], db);
 export const productosBajoStock = () =>
   q<Producto>(`${SELECT_PRODUCTO} WHERE p.activo AND (p.stock_actual - p.stock_reservado) <= p.stock_minimo ORDER BY (p.stock_actual - p.stock_reservado)`);
 
 export async function guardarProducto(uid: number, d: { id?: number; categoria_id: number; nombre: string; descripcion: string | null; foto_url: string | null; precio_venta: number; stock_minimo: number; visible_publico: boolean; activo: boolean }) {
   if (d.nombre.trim().length < 2) throw new ReglaError("Escribe el nombre del producto.");
+  d.nombre = textoConLetras(d.nombre, "el nombre del producto", 2, 80);
+  d.descripcion = textoOpcional(d.descripcion ?? "", "la descripción", 500) || null;
   if (!(d.precio_venta > 0)) throw new ReglaError("El precio de venta debe ser mayor que cero.");
+  d.precio_venta = monto(d.precio_venta, "el precio de venta", { max: 100_000 });
   if (!(d.stock_minimo >= 0)) throw new ReglaError("El stock mínimo no puede ser negativo.");
+  entero(d.stock_minimo, "el stock mínimo", 0, 10_000);
+  if (!Number.isInteger(d.categoria_id) || d.categoria_id <= 0) throw new ReglaError("Elige la categoría del producto.");
   return tx(async (c) => {
     if (d.id) {
       await q(
@@ -59,10 +78,51 @@ export async function guardarProducto(uid: number, d: { id?: number; categoria_i
   });
 }
 
+/**
+ * Elimina un producto del inventario y de la vista de las clientas (CRUD: Eliminar).
+ * - Sin ventas ni pedidos: se borra del todo, junto con sus entradas y ajustes de inventario.
+ * - Con ventas o pedidos anteriores: se retira (ya no aparece en el inventario ni en el catálogo) pero se conserva su historial,
+ *   para que los reportes y los pedidos viejos sigan mostrando qué se vendió y a qué costo.
+ * - Con pedidos pendientes o unidades reservadas: no se puede eliminar hasta atenderlos.
+ */
+export async function eliminarProducto(uid: number, id: number) {
+  await asegurarEliminado();
+  return tx(async (c) => {
+    const p = await q1<{ nombre: string }>("SELECT nombre FROM producto WHERE id = $1 AND eliminado_en IS NULL FOR UPDATE", [id], c);
+    if (!p) throw new ReglaError("El producto no existe.");
+    const abiertos = await q1<{ n: number }>(
+      `SELECT count(DISTINCT pe.id)::int AS n FROM detalle_pedido d JOIN pedido pe ON pe.id = d.pedido_id
+       WHERE d.producto_id = $1 AND pe.estado IN ('Pendiente de confirmación', 'Reservado')`,
+      [id],
+      c,
+    );
+    if (abiertos!.n > 0) throw new ReglaError(`No se puede eliminar «${p.nombre}»: está en ${abiertos!.n} pedido(s) pendiente(s) o con unidades reservadas. Atiéndelos o cancélalos primero.`);
+    const h = await q1<{ n: number }>(
+      `SELECT ((SELECT count(*) FROM detalle_pedido WHERE producto_id = $1) + (SELECT count(*) FROM detalle_venta WHERE producto_id = $1)
+             + (SELECT count(*) FROM reserva_inventario WHERE producto_id = $1))::int AS n`,
+      [id],
+      c,
+    );
+    await q("DELETE FROM item_carrito WHERE producto_id = $1", [id], c);
+    if (h!.n === 0) {
+      await q("DELETE FROM movimiento_inventario WHERE producto_id = $1", [id], c);
+      await q("DELETE FROM producto WHERE id = $1", [id], c);
+      await auditar(c, uid, "Eliminar producto", "producto", id, p.nombre);
+      return `«${p.nombre}» se eliminó del inventario y ya no se ve en el catálogo.`;
+    }
+    await q("UPDATE producto SET eliminado_en = now(), activo = false, visible_publico = false WHERE id = $1", [id], c);
+    await auditar(c, uid, "Eliminar producto (se conserva el historial)", "producto", id, p.nombre);
+    return `«${p.nombre}» se eliminó del inventario y del catálogo. Se conserva su historial de ventas y pedidos para los reportes.`;
+  });
+}
+
 /** Entrada de inventario con cantidad, costo unitario y fecha (RN-26.5). */
 export async function registrarEntrada(uid: number, productoId: number, cantidad: number, costoUnitario: number, motivo: string) {
   if (!Number.isInteger(cantidad) || cantidad <= 0) throw new ReglaError("La cantidad debe ser un número entero mayor que cero.");
+  entero(cantidad, "la cantidad", 1, 10_000);
   if (!(costoUnitario >= 0)) throw new ReglaError("Escribe el costo unitario de adquisición", "RN-26.5");
+  monto(costoUnitario, "el costo unitario", { max: 100_000, permitirCero: true });
+  motivo = textoOpcional(motivo ?? "", "la nota", 150);
   return tx(async (c) => {
     const p = await q1("SELECT id FROM producto WHERE id = $1 FOR UPDATE", [productoId], c);
     if (!p) throw new ReglaError("El producto no existe.");
@@ -80,6 +140,8 @@ export async function registrarEntrada(uid: number, productoId: number, cantidad
 export async function registrarAjuste(uid: number, productoId: number, delta: number, tipo: "Daño" | "Corrección", motivo: string) {
   if (!Number.isInteger(delta) || delta === 0) throw new ReglaError("Indica cuántas unidades se suman o restan.");
   if (!motivo || motivo.trim().length < 3) throw new ReglaError("Todo ajuste debe indicar un motivo", "RN-26.2");
+  motivo = textoConLetras(motivo, "el motivo", 3, 150);
+  entero(Math.abs(delta), "la cantidad del ajuste", 1, 10_000);
   if (tipo === "Daño" && delta > 0) throw new ReglaError("Un daño solo puede restar unidades.");
   return tx(async (c) => {
     const p = await q1<{ stock_actual: number; stock_reservado: number }>("SELECT stock_actual, stock_reservado FROM producto WHERE id = $1 FOR UPDATE", [productoId], c);
@@ -124,6 +186,8 @@ export async function registrarVentaDirecta(uid: number, lineas: { productoId: n
   const items = lineas.filter((l) => l.productoId && l.cantidad > 0);
   if (items.length === 0) throw new ReglaError("Agrega al menos un producto.");
   if (items.some((l) => !Number.isInteger(l.cantidad))) throw new ReglaError("Las cantidades deben ser números enteros.");
+  for (const l of items) entero(l.cantidad, "la cantidad", 1, 999);
+  nota = textoOpcional(nota ?? "", "la nota", 200) || undefined;
   return tx(async (c) => {
     let total = 0;
     const precios: Record<number, number> = {};
@@ -153,8 +217,14 @@ export const ventasRecientes = () =>
 /** CU-34: costos y gastos con concepto, categoría, monto y fecha (RN-28.1 a RN-28.3). */
 export async function registrarGasto(uid: number, d: { categoriaId: number; concepto: string; monto: number; fecha: string; observacion?: string }) {
   if (!d.concepto || d.concepto.trim().length < 3) throw new ReglaError("Escribe el concepto.");
+  d.concepto = textoConLetras(d.concepto, "el concepto", 3, 120);
+  d.observacion = textoOpcional(d.observacion ?? "", "la observación", 300) || undefined;
   if (!(d.monto > 0)) throw new ReglaError("El monto debe ser mayor que cero.");
+  d.monto = monto(d.monto, "el monto", { max: 1_000_000 });
   if (!/^\d{4}-\d{2}-\d{2}$/.test(d.fecha)) throw new ReglaError("Elige la fecha.");
+  const hoyNi = new Date(Date.now() - 6 * 3600_000).toISOString().slice(0, 10);
+  if (d.fecha > hoyNi) throw new ReglaError("La fecha del gasto no puede estar en el futuro.");
+  if (d.fecha < "2020-01-01") throw new ReglaError("Revisa la fecha del gasto.");
   return tx(async (c) => {
     const r = await q1<{ id: number }>(
       "INSERT INTO gasto (usuario_id, categoria_id, concepto, monto, fecha, observacion) VALUES ($1,$2,$3,$4,$5,$6) RETURNING id",

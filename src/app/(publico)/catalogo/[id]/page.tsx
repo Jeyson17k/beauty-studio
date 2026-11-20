@@ -29,13 +29,20 @@ export default async function DetalleProducto({ params }: { params: Promise<{ id
         {agotado ? (
           <p className="mt-5 rounded-xl bg-error-100 px-4 py-3 text-sm text-error-700">Agotado por ahora. Consulta a Andrea por WhatsApp.</p>
         ) : (
-          <form action={accionAgregarCarrito} className="mt-6 flex items-end gap-3">
+          <form action={accionAgregarCarrito} className="mt-6 space-y-3">
             <input type="hidden" name="producto_id" value={p.id} />
-            <label className="w-24">
+            <label className="block w-24">
               <span className="etiqueta-campo">Cantidad</span>
-              <input type="number" name="cantidad" min={1} max={99} defaultValue={1} className="campo" />
+              <input type="number" name="cantidad" min={1} max={99} step={1} required defaultValue={1} className="campo" />
             </label>
-            <button className="btn-primario flex-1">Agregar al carrito</button>
+            <div className="flex flex-col gap-2 sm:flex-row">
+              <button name="ir" value="seguir" className="btn-primario flex-1">
+                Agregar y seguir comprando
+              </button>
+              <button name="ir" value="ver" className="btn-borde flex-1">
+                Agregar y ver carrito
+              </button>
+            </div>
           </form>
         )}
         <p className="mt-3 text-xs text-gris-600">Agregar al carrito no aparta el producto. Andrea confirma la disponibilidad al recibir tu pedido.</p>

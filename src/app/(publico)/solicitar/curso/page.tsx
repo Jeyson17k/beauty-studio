@@ -78,6 +78,7 @@ export default async function SolicitarCurso({ searchParams }: { searchParams: P
                 <textarea name="descripcion" maxLength={300} rows={2} className="campo" placeholder="Ej.: es mi primera clase" />
               </label>
               <p className="ayuda">Tu inscripción queda pendiente de revisión y no aparta cupo hasta que Andrea te envíe la cotización.</p>
+              <p className="ayuda">Al enviar, te mandamos un código por WhatsApp para confirmar que el número es tuyo.</p>
             </Formulario>
           )}
         </div>

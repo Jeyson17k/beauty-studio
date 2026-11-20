@@ -4,14 +4,17 @@ import { SOL } from "@/modulos/estados";
 import { fechaHora, moneda } from "@/lib/tiempo";
 import { mostrarWhatsApp } from "@/lib/telefono";
 import { EncabezadoPanel, Etiqueta, Vacio } from "@/componentes/ui";
+import { BotonArchivar } from "@/componentes/BotonArchivar";
 
 export const dynamic = "force-dynamic";
 export const metadata = { title: "Solicitudes" };
 
 // A03 Centro de solicitudes (CU-11, RF-09): diferencia servicios y cursos y destaca plazos vencidos y envíos fallidos.
-export default async function Solicitudes({ searchParams }: { searchParams: Promise<{ estado?: string; tipo?: string; q?: string }> }) {
+export default async function Solicitudes({ searchParams }: { searchParams: Promise<{ estado?: string; tipo?: string; q?: string; ver?: string }> }) {
   const sp = await searchParams;
-  const filas = await listarSolicitudes({ estado: sp.estado, tipo: sp.tipo, texto: sp.q });
+  const archivadas = sp.ver === "archivadas";
+  const filas = await listarSolicitudes({ estado: sp.estado, tipo: sp.tipo, texto: sp.q, archivadas });
+  const ARCHIVABLES: string[] = [SOL.RECHAZADA, SOL.CANCELADA, SOL.EXPIRADA];
   return (
     <>
       <EncabezadoPanel titulo="Centro de solicitudes">
@@ -42,13 +45,20 @@ export default async function Solicitudes({ searchParams }: { searchParams: Prom
               <option value="curso">Cursos</option>
             </select>
           </label>
+          <label>
+            <span className="etiqueta-campo">Mostrar</span>
+            <select name="ver" defaultValue={sp.ver ?? ""} className="campo">
+              <option value="">Activas</option>
+              <option value="archivadas">Archivadas</option>
+            </select>
+          </label>
           <button className="btn-borde">Filtrar</button>
         </form>
 
         <div className="tarjeta overflow-x-auto">
           {filas.length === 0 ? (
             <div className="p-4">
-              <Vacio>No hay solicitudes con esos filtros.</Vacio>
+              <Vacio>{archivadas ? "No hay solicitudes archivadas." : "No hay solicitudes con esos filtros."}</Vacio>
             </div>
           ) : (
             <table className="tabla">
@@ -87,9 +97,12 @@ export default async function Solicitudes({ searchParams }: { searchParams: Prom
                     <td>{f.ultimo_mensaje ? <Etiqueta texto={f.ultimo_mensaje} /> : <span className="text-xs text-gris-600">—</span>}</td>
                     <td>{moneda(f.precio_total)}</td>
                     <td>
-                      <Link href={`/panel/solicitudes/${f.id}`} className="font-semibold text-oro-700">
-                        Abrir
-                      </Link>
+                      <div className="flex items-center gap-3">
+                        <Link href={`/panel/solicitudes/${f.id}`} className="font-semibold text-oro-700">
+                          Abrir
+                        </Link>
+                        {ARCHIVABLES.includes(f.estado) && <BotonArchivar id={f.id} restaurar={archivadas} />}
+                      </div>
                     </td>
                   </tr>
                 ))}

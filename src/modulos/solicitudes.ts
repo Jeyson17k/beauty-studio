@@ -2,11 +2,22 @@
 import type { PoolClient } from "pg";
 import { q, q1, tx } from "@/lib/db";
 import { ReglaError } from "@/lib/errores";
+import { monto, textoConLetras, textoOpcional } from "@/lib/validar";
 import { guardarArchivo } from "@/lib/almacenamiento";
 import { cuposDisponibles, liberar, moverIntervalo, recalcularSesion } from "./agenda";
 import { auditar, notificar } from "./seguridad";
 import { identificar } from "./clientas";
 import { SOL } from "./estados";
+
+let columnaArchivada: Promise<unknown> | null = null;
+/** Agrega la columna de archivado si la base de datos todavía no la tiene (se hace una sola vez; los datos no se tocan). */
+function asegurarArchivado() {
+  columnaArchivada ??= q("ALTER TABLE solicitud_actividad ADD COLUMN IF NOT EXISTS archivada_en TIMESTAMPTZ").catch((e) => {
+    columnaArchivada = null;
+    throw e;
+  });
+  return columnaArchivada;
+}
 
 export type DatosServicio = {
   clienteId: string; servicioId: number; inicio: Date; descripcion?: string; fueraLocal: boolean; direccion?: string; referencia?: string; fotos?: File[];
@@ -21,7 +32,10 @@ function validarFuturo(d: Date) {
 export async function registrarSolicitudServicio(d: DatosServicio, opciones: { directo?: boolean; uid?: number } = {}) {
   validarFuturo(d.inicio);
   if (d.fueraLocal && !(d.direccion && d.direccion.trim().length >= 5)) throw new ReglaError("Escribe la dirección para la atención a domicilio", "RN-07.6");
+  if (d.fueraLocal) d.direccion = textoConLetras(d.direccion ?? "", "la dirección", 5, 200);
+  d.referencia = textoOpcional(d.referencia ?? "", "el punto de referencia", 200);
   if ((d.descripcion ?? "").length > 300) throw new ReglaError("La descripción admite hasta 300 caracteres.");
+  d.descripcion = textoOpcional(d.descripcion ?? "", "la descripción", 300);
   const fotos = (d.fotos ?? []).filter((f) => f && f.size > 0);
   if (fotos.length > 5) throw new ReglaError("Puedes adjuntar hasta 5 fotografías.");
   const claves: string[] = [];
@@ -87,7 +101,7 @@ export async function registrarSolicitudCurso(
 
 /** CU-12: cotización. Andrea fija el precio; el sistema calcula 10 % de anticipo y el saldo (RN-10.3). No aparta ni inicia plazo (RN-10.4). */
 export async function guardarCotizacion(uid: number, solicitudId: number, precio: number, duracionMin: number, trasladoMin: number | null) {
-  if (!(precio > 0) || precio > 1_000_000) throw new ReglaError("Escribe un precio total válido.");
+  monto(precio, "el precio total");
   const precioR = Math.round(precio * 100) / 100;
   const anticipo = Math.round(precioR * 10) / 100;
   return tx(async (c) => {
@@ -118,8 +132,8 @@ export async function guardarCotizacion(uid: number, solicitudId: number, precio
 
 /** CU-23: rechazar (desde revisión) o cancelar (con reserva). Se conserva el registro y los pagos (RN-16.1 a RN-16.6). */
 export async function rechazarOCancelar(uid: number, solicitudId: number, motivo: string, origen: "clienta" | "andrea") {
-  const m = (motivo || "").trim();
-  if (m.length < 3) throw new ReglaError("Escribe el motivo", "RN-16.1");
+  if ((motivo || "").trim().length < 3) throw new ReglaError("Escribe el motivo", "RN-16.1");
+  const m = textoConLetras(motivo, "el motivo", 3, 300);
   return tx(async (c) => {
     const s = await q1<{ estado: string }>("SELECT estado FROM solicitud_actividad WHERE id = $1 FOR UPDATE", [solicitudId], c);
     if (!s) throw new ReglaError("La solicitud no existe.");
@@ -228,14 +242,31 @@ const BASE = `
   LEFT JOIN sesion_curso ses ON ses.id = s.sesion_id LEFT JOIN curso cu ON cu.id = ses.curso_id
   LEFT JOIN cotizacion co ON co.solicitud_id = s.id AND co.vigente`;
 
-export async function listarSolicitudes(f: { estado?: string; tipo?: string; texto?: string } = {}) {
+export async function listarSolicitudes(f: { estado?: string; tipo?: string; texto?: string; archivadas?: boolean } = {}) {
+  await asegurarArchivado();
   return q<FilaSolicitud>(
     `${BASE} WHERE ($1::text IS NULL OR s.estado = $1) AND ($2::text IS NULL OR s.tipo = $2)
        AND ($3::text IS NULL OR c.nombre ILIKE '%' || $3 || '%' OR c.whatsapp LIKE '%' || $3 || '%' OR s.id::text = $3)
+       AND (s.archivada_en IS NOT NULL) = $4::boolean
      ORDER BY CASE s.estado WHEN 'Plazo vencido pendiente de revisión' THEN 0 WHEN 'Pendiente de revisión' THEN 1 WHEN 'Cotización en envío' THEN 2 WHEN 'Pendiente de pago' THEN 3 ELSE 4 END,
               s.creado_en DESC LIMIT 200`,
-    [f.estado || null, f.tipo || null, f.texto?.trim() || null],
+    [f.estado || null, f.tipo || null, f.texto?.trim() || null, !!f.archivadas],
   );
+}
+
+/** Solicitudes que ya terminaron sin atención: se pueden archivar para que no ocupen espacio en el centro de solicitudes. */
+const ARCHIVABLES: string[] = [SOL.RECHAZADA, SOL.CANCELADA, SOL.EXPIRADA];
+
+/** Archiva (o restaura) una solicitud rechazada, cancelada o expirada. No se borra nada: se conservan el motivo, los pagos y el historial. */
+export async function archivarSolicitud(uid: number, solicitudId: number, archivar = true) {
+  await asegurarArchivado();
+  await tx(async (c) => {
+    const s = await q1<{ estado: string }>("SELECT estado FROM solicitud_actividad WHERE id = $1 FOR UPDATE", [solicitudId], c);
+    if (!s) throw new ReglaError("La solicitud no existe.");
+    if (!ARCHIVABLES.includes(s.estado)) throw new ReglaError(`Solo se archivan solicitudes rechazadas, canceladas o expiradas; esta está «${s.estado}».`);
+    await q("UPDATE solicitud_actividad SET archivada_en = CASE WHEN $2::boolean THEN now() END WHERE id = $1", [solicitudId, archivar], c);
+    await auditar(c, uid, archivar ? "Archivar solicitud" : "Restaurar solicitud", "solicitud_actividad", solicitudId, s.estado);
+  });
 }
 
 export async function solicitudesPorEstado(estados: string[], limite = 20) {
