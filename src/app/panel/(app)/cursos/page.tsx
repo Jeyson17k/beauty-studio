@@ -125,11 +125,11 @@ export default async function CursosPanel() {
                 <input type="hidden" name="modalidad" value={c.modalidad} />
                 <label>
                   <span className="etiqueta-campo">Nombre</span>
-                  <input name="nombre" defaultValue={c.nombre} className="campo" />
+                  <input name="nombre" required minLength={3} maxLength={80} pattern=".*\p{L}.*" title="Debe llevar palabras, no solo números o símbolos." defaultValue={c.nombre} className="campo" />
                 </label>
                 <label>
                   <span className="etiqueta-campo">Precio de referencia (C$)</span>
-                  <input name="precio_base" defaultValue={c.precio_base ?? ""} className="campo" />
+                  <input name="precio_base" inputMode="decimal" maxLength={12} pattern=" *[0-9][0-9,]*(\.[0-9]{1,2})? *" title="Escribe solo números, con hasta dos decimales (por ejemplo 1300 o 1300.50)." defaultValue={c.precio_base ?? ""} className="campo" />
                 </label>
                 <label className="sm:col-span-2">
                   <span className="etiqueta-campo">Descripción</span>
@@ -146,7 +146,7 @@ export default async function CursosPanel() {
             <Formulario accion={accionGuardarCurso} boton="Registrar curso" className="mt-3 grid gap-3 sm:grid-cols-2" reiniciar>
               <label>
                 <span className="etiqueta-campo">Nombre</span>
-                <input name="nombre" required className="campo" />
+                <input name="nombre" required minLength={3} maxLength={80} pattern=".*\p{L}.*" title="Debe llevar palabras, no solo números o símbolos." className="campo" />
               </label>
               <label>
                 <span className="etiqueta-campo">Modalidad</span>
@@ -161,7 +161,7 @@ export default async function CursosPanel() {
               </label>
               <label>
                 <span className="etiqueta-campo">Precio de referencia (C$)</span>
-                <input name="precio_base" className="campo" />
+                <input name="precio_base" inputMode="decimal" maxLength={12} pattern=" *[0-9][0-9,]*(\.[0-9]{1,2})? *" title="Escribe solo números, con hasta dos decimales (por ejemplo 1300 o 1300.50)." className="campo" />
               </label>
               <label className="flex items-center gap-2 pt-6 text-sm">
                 <input type="checkbox" name="activo" defaultChecked className="h-4 w-4 accent-[#7a5c24]" /> Activo

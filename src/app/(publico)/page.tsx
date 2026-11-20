@@ -16,9 +16,18 @@ export default async function Inicio() {
     { titulo: "Productos", img: "/img/area_productos.jpg" },
   ];
   return (
-    <div>
+    <div className="relative isolate">
+      {/* Fondo de toda la página de inicio: foto del salón de Andrea, oscurecida. Ocupa solo esta página
+          (no cubre el pie) y se queda quieta al deslizar gracias al contenedor «sticky». */}
+      <div aria-hidden className="absolute inset-0 -z-10 bg-negro-950">
+        <div className="sticky top-0 h-dvh w-full overflow-hidden">
+          <Image src="/img/fondo_salon.jpg" alt="" fill priority sizes="100vw" className="object-cover object-center opacity-45 blur-[2px]" />
+        </div>
+      </div>
+
       {/* ---------- Portada ---------- */}
-      <section className="relative overflow-hidden bg-negro-950 text-white">
+      <section className="relative overflow-hidden text-white">
+        <div aria-hidden className="absolute inset-0 bg-gradient-to-r from-negro-950/90 via-negro-950/65 to-negro-950/40" />
         <div aria-hidden className="pointer-events-none absolute -left-32 top-10 h-80 w-80 rounded-full bg-oro-400/15 blur-3xl" />
         <div aria-hidden className="pointer-events-none absolute -right-20 bottom-0 h-96 w-96 rounded-full bg-oro-500/10 blur-3xl" />
         <div className="contenedor relative grid items-center gap-10 py-10 md:grid-cols-[1.15fr_0.85fr] md:py-16 lg:py-20">
@@ -55,11 +64,11 @@ export default async function Inicio() {
               </Link>
             </div>
           </div>
-          <div className="relative mx-auto w-full max-w-[340px] md:max-w-none">
+          <div className="relative mx-auto w-full max-w-[340px] md:max-w-[420px]">
             <div aria-hidden className="absolute -inset-3 rounded-[48%_48%_32px_32px] border border-oro-300/40" />
             <div className="relative overflow-hidden rounded-[46%_46%_28px_28px] border-2 border-oro-300/70 bg-negro-900">
-              {/* Foto completa de Andrea (cabeza a pies): el texto va debajo para no taparla */}
-              <Image src="/img/hero_andrea_v2.jpg" alt="Andrea Paola" width={1000} height={1000} priority className="block h-auto w-full" />
+              {/* Foto de Andrea con su certificado (recortada a 3:4 para no ocupar tanto alto): el texto va debajo */}
+              <Image src="/img/hero_andrea_v3.jpg" alt="Andrea Paola con su certificado" width={720} height={1280} priority className="block aspect-[3/4] w-full object-cover object-[center_32%]" />
               <div className="bg-negro-900 px-5 pb-5 pt-3 text-center">
                 <p className="font-titulo text-xl font-semibold uppercase tracking-[0.14em]">Agenda abierta</p>
                 <p className="text-sm text-white/70">Graduaciones, bodas, sesiones de fotos y eventos</p>
@@ -70,7 +79,7 @@ export default async function Inicio() {
       </section>
 
       {/* ---------- Áreas clave ---------- */}
-      <section className="bg-negro-900 py-12 text-white md:py-16">
+      <section className="bg-negro-900/80 py-12 text-white md:py-16">
         <div className="contenedor">
           <div className="flex items-end gap-4">
             <span className="texto-oro font-titulo text-7xl font-bold leading-none md:text-8xl">4</span>
@@ -94,7 +103,7 @@ export default async function Inicio() {
       </section>
 
       {/* ---------- 1. Servicios ---------- */}
-      <section className="bg-crema-50 py-12 md:py-16">
+      <section className="bg-crema-50/90 py-12 md:py-16">
         <div className="contenedor">
           <div className="flex flex-wrap items-center justify-between gap-4">
             <InsigniaSeccion numero={1} titulo="Servicios de belleza" claro />
@@ -118,7 +127,7 @@ export default async function Inicio() {
       </section>
 
       {/* ---------- 2. Cursos ---------- */}
-      <section className="bg-negro-950 py-12 text-white md:py-16">
+      <section className="bg-negro-950/80 py-12 text-white md:py-16">
         <div className="contenedor grid items-center gap-10 md:grid-cols-2">
           <div>
             <InsigniaSeccion numero={2} titulo="Cursos de maquillaje" />
@@ -155,7 +164,7 @@ export default async function Inicio() {
       </section>
 
       {/* ---------- 3. Cómo funciona ---------- */}
-      <section className="bg-crema-100 py-12 md:py-16">
+      <section className="bg-crema-100/90 py-12 md:py-16">
         <div className="contenedor grid gap-10 md:grid-cols-[1fr_0.8fr] md:items-center">
           <div>
             <InsigniaSeccion numero={3} titulo="¿Cómo funciona?" claro />

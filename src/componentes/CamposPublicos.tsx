@@ -8,11 +8,11 @@ export function CamposIdentificacion({ conTitulo = true }: { conTitulo?: boolean
       {conTitulo && <legend className="mb-1 text-base font-bold">Tus datos</legend>}
       <label className="block">
         <span className="etiqueta-campo">Nombre completo</span>
-        <input name="nombre" required minLength={3} maxLength={100} autoComplete="name" className="campo" placeholder="Ej.: Valeria Gómez" />
+        <input name="nombre" required minLength={3} maxLength={100} autoComplete="name" pattern=" *\p{L}[\p{L}\p{M}'.\-]+( +[\p{L}\p{M}'.\-]+)+ *" title="Escribe nombre y apellido, solo con letras (sin números ni símbolos)." className="campo" placeholder="Ej.: Valeria Gómez" />
       </label>
       <label className="block">
         <span className="etiqueta-campo">Número de WhatsApp</span>
-        <input name="whatsapp" required inputMode="tel" autoComplete="tel" className="campo" placeholder="8888 8888" />
+        <input name="whatsapp" required inputMode="tel" maxLength={20} pattern=" *\+?[0-9 \(\)\-.]{8,20} *" title="Escribe un número de WhatsApp con dígitos, por ejemplo 8888 1234." autoComplete="tel" className="campo" placeholder="8888 8888" />
         <span className="ayuda">Con este número se asocian tus solicitudes. No te pediremos correo ni contraseña.</span>
       </label>
       <label className="flex items-start gap-3 rounded-xl bg-crema-100 p-3 text-sm">
@@ -41,11 +41,11 @@ export function CamposLugar({ etiquetas = ["En el salón", "A domicilio"] }: { e
         <div className="mt-3 space-y-3">
           <label className="block">
             <span className="etiqueta-campo">Dirección</span>
-            <input name="direccion" required minLength={5} maxLength={250} className="campo" placeholder="Barrio, calle, número de casa" />
+            <input name="direccion" required minLength={5} maxLength={200} pattern=".*\p{L}.*" title="Debe llevar palabras, no solo números o símbolos." className="campo" placeholder="Barrio, calle, número de casa" />
           </label>
           <label className="block">
             <span className="etiqueta-campo">Referencia</span>
-            <input name="referencia" maxLength={150} className="campo" placeholder="Ej.: frente al parque, portón negro" />
+            <input name="referencia" maxLength={150} pattern=".*\p{L}.*" title="Debe llevar palabras, no solo números o símbolos." className="campo" placeholder="Ej.: frente al parque, portón negro" />
           </label>
           {etiquetas[0] === "En el salón" && <p className="ayuda">Andrea suma el tiempo de traslado a la duración de la atención.</p>}
         </div>

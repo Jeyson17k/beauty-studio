@@ -18,8 +18,8 @@ const horaTxt = (ms: number) => {
 };
 const MESES = ["enero", "febrero", "marzo", "abril", "mayo", "junio", "julio", "agosto", "septiembre", "octubre", "noviembre", "diciembre"];
 const DIAS = ["L", "M", "M", "J", "V", "S", "D"];
-const HORA_INICIO = 8 * 60;
-const HORA_FIN = 19 * 60; // última hora de inicio: 6:30 p. m.
+const HORA_INICIO = 0; // Andrea atiende las 24 horas del día (RN-05.11)
+const HORA_FIN = 24 * 60; // última hora de inicio: 11:30 p. m.
 const PASO = 30;
 
 /**

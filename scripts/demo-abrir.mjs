@@ -29,7 +29,7 @@ hijo.stdout.on("data", (trozo) => {
   if (m) direccion = m[1];
   if (!abierto && direccion && /Ready/.test(texto)) {
     abierto = true;
-    const url = `${direccion}/panel/login`;
+    const url = `${direccion}/panel/login/salir`; // cierra cualquier sesión abierta y muestra el inicio de sesión
     console.log(`\n>> Abriendo ${url}\n`);
     abrir(url);
   }

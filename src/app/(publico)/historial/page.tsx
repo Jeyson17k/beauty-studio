@@ -23,7 +23,7 @@ export default async function PedirCodigo() {
         <Formulario accion={accionPedirCodigo} boton="Enviarme el código" botonAncho>
           <label className="block">
             <span className="etiqueta-campo">Número de WhatsApp</span>
-            <input name="whatsapp" required inputMode="tel" defaultValue={clienta ? mostrarWhatsApp(clienta.whatsapp) : ""} className="campo" placeholder="8888 8888" />
+            <input name="whatsapp" required inputMode="tel" maxLength={20} pattern=" *\+?[0-9 \(\)\-.]{8,20} *" title="Escribe un número de WhatsApp con dígitos, por ejemplo 8888 1234." defaultValue={clienta ? mostrarWhatsApp(clienta.whatsapp) : ""} className="campo" placeholder="8888 8888" />
           </label>
         </Formulario>
       </div>

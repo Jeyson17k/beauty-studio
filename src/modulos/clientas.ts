@@ -4,6 +4,7 @@
 import crypto from "crypto";
 import { q, q1, tx } from "@/lib/db";
 import { ReglaError } from "@/lib/errores";
+import { nombrePersona } from "@/lib/validar";
 import { leerConfig } from "@/lib/config";
 import { normalizarWhatsApp } from "@/lib/telefono";
 import { COD } from "./estados";
@@ -13,10 +14,7 @@ import { plantillaCodigo } from "./whatsapp/plantillas";
 export type Clienta = { id: string; nombre: string; whatsapp: string; acepta_whatsapp: boolean; acepta_whatsapp_en: Date | null };
 
 export function validarNombre(nombre: string): string {
-  const n = (nombre || "").replace(/\s+/g, " ").trim();
-  if (n.length < 3 || n.length > 100 || !/\p{L}/u.test(n)) throw new ReglaError("Escribe tu nombre completo (3 a 100 caracteres).");
-  if (!n.includes(" ")) throw new ReglaError("Escribe tu nombre y apellido.");
-  return n;
+  return nombrePersona(nombre);
 }
 
 /** Registra o actualiza a la clienta por su número (RN-01.2) y guarda la aceptación de mensajes con su fecha (RN-01.6). */

@@ -33,7 +33,7 @@ export default async function Ventas() {
                       </option>
                     ))}
                   </select>
-                  <input name="cantidad" type="number" min={0} defaultValue={i === 0 ? 1 : 0} className="campo" aria-label="Cantidad" />
+                  <input name="cantidad" type="number" min={0} max={999} step={1} defaultValue={i === 0 ? 1 : 0} className="campo" aria-label="Cantidad" />
                 </div>
               ))}
               <label className="block">

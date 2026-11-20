@@ -29,6 +29,13 @@ const CamposPasswordNueva = () => (
   </>
 );
 
+const AvisoListo = ({ texto }: { texto: string | null }) =>
+  texto ? (
+    <p role="status" className="rounded-xl bg-ok-100 px-4 py-3 text-sm text-ok-700">
+      {texto}
+    </p>
+  ) : null;
+
 /** Inicio de sesión → «¿Olvidaste tu contraseña?»: correo → código → contraseña nueva. */
 export function RecuperarContrasena() {
   const [correo, setCorreo] = useState("");
@@ -68,7 +75,17 @@ export function RecuperarContrasena() {
 /** Configuración → cambiar contraseña: se envía un código al correo registrado y se confirma con él. */
 export function CambiarContrasena({ correoOculto }: { correoOculto: string | null }) {
   const [paso, setPaso] = useState<1 | 2>(1);
-  const aPaso2 = useCallback(() => setPaso(2), []);
+  const [ronda, setRonda] = useState(0);
+  const [hecho, setHecho] = useState<string | null>(null);
+  const aPaso2 = useCallback(() => {
+    setPaso(2);
+    setHecho(null);
+  }, []);
+  const alConfirmar = useCallback((m?: string) => {
+    setPaso(1);
+    setRonda((n) => n + 1);
+    setHecho(m ?? "Listo.");
+  }, []);
   if (!correoOculto) {
     return <p className="mt-2 rounded-xl bg-aviso-100 px-4 py-3 text-sm text-aviso-700">Para cambiar la contraseña con un código, primero registra tu correo en la sección de arriba.</p>;
   }
@@ -77,13 +94,14 @@ export function CambiarContrasena({ correoOculto }: { correoOculto: string | nul
       <p className="text-sm text-gris-600">
         Te enviamos un código de 6 dígitos a <strong>{correoOculto}</strong> para confirmar que eres tú.
       </p>
-      <Formulario accion={accionPedirCodigoCambio} boton={paso === 1 ? "Enviarme un código" : "Enviar un código nuevo"} claseBoton="btn-borde" alExito={aPaso2} />
+      <Formulario key={ronda} accion={accionPedirCodigoCambio} boton={paso === 1 ? "Enviarme un código" : "Enviar un código nuevo"} claseBoton="btn-borde" alExito={aPaso2} />
       {paso === 2 && (
-        <Formulario accion={accionCambiarPasswordConCodigo} boton="Cambiar contraseña" reiniciar className="space-y-3">
+        <Formulario accion={accionCambiarPasswordConCodigo} boton="Cambiar contraseña" reiniciar className="space-y-3" alExito={alConfirmar}>
           <CampoCodigo />
           <CamposPasswordNueva />
         </Formulario>
       )}
+      <AvisoListo texto={paso === 1 ? hecho : null} />
     </div>
   );
 }
@@ -91,7 +109,17 @@ export function CambiarContrasena({ correoOculto }: { correoOculto: string | nul
 /** Configuración → correo de recuperación: el código llega al correo nuevo para comprobar que es de ella. */
 export function RegistrarCorreo({ correoOculto }: { correoOculto: string | null }) {
   const [paso, setPaso] = useState<1 | 2>(1);
-  const aPaso2 = useCallback(() => setPaso(2), []);
+  const [ronda, setRonda] = useState(0);
+  const [hecho, setHecho] = useState<string | null>(null);
+  const aPaso2 = useCallback(() => {
+    setPaso(2);
+    setHecho(null);
+  }, []);
+  const alConfirmar = useCallback((m?: string) => {
+    setPaso(1);
+    setRonda((n) => n + 1);
+    setHecho(m ?? "Listo.");
+  }, []);
   return (
     <div className="mt-3 space-y-4">
       <p className="text-sm text-gris-600">
@@ -103,7 +131,7 @@ export function RegistrarCorreo({ correoOculto }: { correoOculto: string | null 
           "Todavía no hay un correo registrado. Regístralo para poder recuperar y cambiar la contraseña con un código."
         )}
       </p>
-      <Formulario accion={accionPedirCodigoCorreo} boton={paso === 1 ? "Enviar código al correo" : "Enviar un código nuevo"} claseBoton="btn-borde" className="space-y-3" alExito={aPaso2}>
+      <Formulario key={ronda} accion={accionPedirCodigoCorreo} boton={paso === 1 ? "Enviar código al correo" : "Enviar un código nuevo"} claseBoton="btn-borde" className="space-y-3" alExito={aPaso2}>
         <label className="block">
           <span className="etiqueta-campo">{correoOculto ? "Correo nuevo" : "Correo"}</span>
           <input name="correo" type="email" required autoComplete="email" placeholder="nombre@gmail.com" className="campo" />
@@ -114,10 +142,11 @@ export function RegistrarCorreo({ correoOculto }: { correoOculto: string | null 
         </label>
       </Formulario>
       {paso === 2 && (
-        <Formulario accion={accionConfirmarCorreo} boton="Confirmar correo" reiniciar className="space-y-3">
+        <Formulario accion={accionConfirmarCorreo} boton="Confirmar correo" reiniciar className="space-y-3" alExito={alConfirmar}>
           <CampoCodigo />
         </Formulario>
       )}
+      <AvisoListo texto={paso === 1 ? hecho : null} />
     </div>
   );
 }
@@ -138,7 +167,18 @@ export function RecordarUsuario() {
 export function CambiarUsuario({ usuarioActual, correoOculto }: { usuarioActual: string; correoOculto: string | null }) {
   const [paso, setPaso] = useState<1 | 2>(1);
   const [nuevo, setNuevo] = useState("");
-  const aPaso2 = useCallback(() => setPaso(2), []);
+  const [ronda, setRonda] = useState(0);
+  const [hecho, setHecho] = useState<string | null>(null);
+  const aPaso2 = useCallback(() => {
+    setPaso(2);
+    setHecho(null);
+  }, []);
+  const alConfirmar = useCallback((m?: string) => {
+    setPaso(1);
+    setNuevo("");
+    setRonda((n) => n + 1);
+    setHecho(m ?? "Listo.");
+  }, []);
   return (
     <div className="mt-3 space-y-4">
       <p className="text-sm text-gris-600">
@@ -148,7 +188,7 @@ export function CambiarUsuario({ usuarioActual, correoOculto }: { usuarioActual:
         <p className="rounded-xl bg-aviso-100 px-4 py-3 text-sm text-aviso-700">Para cambiar el usuario con un código, primero registra tu correo en la sección de arriba.</p>
       ) : (
         <>
-          <Formulario accion={accionPedirCodigoUsuario} boton={paso === 1 ? "Enviar código al correo" : "Enviar un código nuevo"} claseBoton="btn-borde" className="space-y-3" alExito={aPaso2}>
+          <Formulario key={ronda} accion={accionPedirCodigoUsuario} boton={paso === 1 ? "Enviar código al correo" : "Enviar un código nuevo"} claseBoton="btn-borde" className="space-y-3" alExito={aPaso2}>
             <label className="block">
               <span className="etiqueta-campo">Usuario nuevo</span>
               <input name="usuario_nuevo" required minLength={4} maxLength={30} autoComplete="off" value={nuevo} onChange={(e) => setNuevo(e.target.value)} className="campo" />
@@ -156,11 +196,12 @@ export function CambiarUsuario({ usuarioActual, correoOculto }: { usuarioActual:
             </label>
           </Formulario>
           {paso === 2 && (
-            <Formulario accion={accionCambiarUsuario} boton="Cambiar usuario" className="space-y-3">
+            <Formulario accion={accionCambiarUsuario} boton="Cambiar usuario" className="space-y-3" alExito={alConfirmar}>
               <input type="hidden" name="usuario_nuevo" value={nuevo} />
               <CampoCodigo />
             </Formulario>
           )}
+          <AvisoListo texto={paso === 1 ? hecho : null} />
         </>
       )}
     </div>

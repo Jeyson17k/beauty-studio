@@ -135,7 +135,7 @@ export default async function DetalleSolicitud({ params }: { params: Promise<{ i
                 <input type="hidden" name="solicitud_id" value={s.id} />
                 <label>
                   <span className="etiqueta-campo">Precio total (C$)</span>
-                  <input name="precio_total" required inputMode="decimal" defaultValue={s.precio_total ?? ""} className="campo" />
+                  <input name="precio_total" required inputMode="decimal" maxLength={12} pattern=" *[0-9][0-9,]*(\.[0-9]{1,2})? *" title="Escribe solo números, con hasta dos decimales (por ejemplo 1300 o 1300.50)." defaultValue={s.precio_total ?? ""} className="campo" />
                 </label>
                 {s.tipo === "servicio" ? (
                   <>
@@ -250,7 +250,7 @@ export default async function DetalleSolicitud({ params }: { params: Promise<{ i
                   </label>
                   <label>
                     <span className="etiqueta-campo">Monto (C$)</span>
-                    <input name="monto" required inputMode="decimal" defaultValue={s.anticipo ?? ""} className="campo" />
+                    <input name="monto" required inputMode="decimal" maxLength={12} pattern=" *[0-9][0-9,]*(\.[0-9]{1,2})? *" title="Escribe solo números, con hasta dos decimales (por ejemplo 1300 o 1300.50)." defaultValue={s.anticipo ?? ""} className="campo" />
                   </label>
                   <label className="sm:col-span-2">
                     <span className="etiqueta-campo">Fecha y hora del pago</span>
@@ -263,7 +263,7 @@ export default async function DetalleSolicitud({ params }: { params: Promise<{ i
                   <input type="hidden" name="solicitud_id" value={s.id} />
                   <label className="min-w-60 flex-1">
                     <span className="etiqueta-campo">Resultado de la revisión</span>
-                    <input name="motivo" defaultValue="Sin pago dentro del plazo" className="campo" />
+                    <input name="motivo" maxLength={300} pattern=".*\p{L}.*" title="Debe llevar palabras, no solo números o símbolos." defaultValue="Sin pago dentro del plazo" className="campo" />
                   </label>
                 </Formulario>
               )}
@@ -325,7 +325,7 @@ export default async function DetalleSolicitud({ params }: { params: Promise<{ i
                     )}
                     <label>
                       <span className="etiqueta-campo">Motivo</span>
-                      <input name="motivo" className="campo" placeholder="Ej.: la clienta pidió otra fecha" />
+                      <input name="motivo" maxLength={300} pattern=".*\p{L}.*" title="Debe llevar palabras, no solo números o símbolos." className="campo" placeholder="Ej.: la clienta pidió otra fecha" />
                     </label>
                     <p className="ayuda sm:col-span-2">Se asegura el nuevo horario antes de liberar el anterior y se conserva el anticipo.</p>
                   </Formulario>
@@ -340,7 +340,7 @@ export default async function DetalleSolicitud({ params }: { params: Promise<{ i
                         </label>
                         <label>
                           <span className="etiqueta-campo">Motivo</span>
-                          <input name="motivo" className="campo" />
+                          <input name="motivo" maxLength={300} pattern=".*\p{L}.*" title="Debe llevar palabras, no solo números o símbolos." className="campo" />
                         </label>
                       </Formulario>
                     </details>
@@ -376,7 +376,7 @@ export default async function DetalleSolicitud({ params }: { params: Promise<{ i
                 <input type="hidden" name="solicitud_id" value={s.id} />
                 <label>
                   <span className="etiqueta-campo">Monto recibido (C$)</span>
-                  <input name="monto" required inputMode="decimal" defaultValue={saldo.saldo} className="campo" />
+                  <input name="monto" required inputMode="decimal" maxLength={12} pattern=" *[0-9][0-9,]*(\.[0-9]{1,2})? *" title="Escribe solo números, con hasta dos decimales (por ejemplo 1300 o 1300.50)." defaultValue={saldo.saldo} className="campo" />
                 </label>
               </Formulario>
             </Seccion>
@@ -395,7 +395,7 @@ export default async function DetalleSolicitud({ params }: { params: Promise<{ i
                 <input type="hidden" name="solicitud_id" value={s.id} />
                 <label>
                   <span className="etiqueta-campo">Motivo</span>
-                  <input name="motivo" required minLength={3} className="campo" placeholder={s.estado === SOL.PENDIENTE_REVISION ? "Ej.: no hay disponibilidad ese día" : "Ej.: la clienta no puede asistir"} />
+                  <input name="motivo" maxLength={300} pattern=".*\p{L}.*" title="Debe llevar palabras, no solo números o símbolos." required minLength={3} className="campo" placeholder={s.estado === SOL.PENDIENTE_REVISION ? "Ej.: no hay disponibilidad ese día" : "Ej.: la clienta no puede asistir"} />
                 </label>
                 {s.estado !== SOL.PENDIENTE_REVISION && (
                   <label>

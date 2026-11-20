@@ -2,6 +2,7 @@
 // El sistema no valida depósitos: Andrea comprueba el dinero y registra la validación (RN-13.4, RN-13.5).
 import { q, q1, tx } from "@/lib/db";
 import { ReglaError } from "@/lib/errores";
+import { monto as validarMonto } from "@/lib/validar";
 import { guardarArchivo } from "@/lib/almacenamiento";
 import { confirmar, liberar } from "./agenda";
 import { auditar } from "./seguridad";
@@ -12,6 +13,7 @@ import { enviarAvisoConfirmacion } from "./whatsapp/servicio";
 export async function cargarComprobante(uid: number, solicitudId: number, archivo: File, monto: number, pagadoEn: Date) {
   if (!archivo || archivo.size === 0) throw new ReglaError("Adjunta el comprobante.");
   if (!(monto > 0)) throw new ReglaError("Escribe el monto del pago.");
+  validarMonto(monto, "el monto del pago");
   if (Number.isNaN(pagadoEn.getTime()) || pagadoEn.getTime() > Date.now() + 60_000) throw new ReglaError("La fecha y hora del pago no puede estar en el futuro", "RN-13.3");
   const s = await q1<{ estado: string }>("SELECT estado FROM solicitud_actividad WHERE id = $1", [solicitudId]);
   if (!s) throw new ReglaError("La solicitud no existe.");
@@ -137,6 +139,7 @@ export async function registrarSaldo(uid: number, solicitudId: number, monto: nu
     if (!sp) throw new ReglaError("La solicitud no tiene cotización.");
     const m = Math.round(monto * 100) / 100;
     if (!(m > 0)) throw new ReglaError("Escribe el monto recibido.");
+    validarMonto(monto, "el monto recibido");
     if (m > sp.saldo + 0.001) throw new ReglaError(`El monto supera el saldo pendiente (C$ ${sp.saldo}).`);
     await q("INSERT INTO pago (solicitud_id, tipo, monto, registrado_por) VALUES ($1,'Saldo',$2,$3)", [solicitudId, m, uid], c);
     const cierra = Math.abs(sp.saldo - m) < 0.005;

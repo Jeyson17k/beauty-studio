@@ -25,7 +25,9 @@ let n = 1000;
 let horaLibre = 400;
 export async function clienta(acepta = true, numero?: string) {
   n++;
-  return identificar(`Clienta Prueba${n}`, numero ?? `8800${n}`, acepta);
+  // El nombre no admite números (RNF-04): el número de la clienta de prueba se escribe con letras.
+  const letras = String(n).split("").map((d) => "abcdefghij"[Number(d)]).join("");
+  return identificar(`Clienta Prueba${letras}`, numero ?? `8800${n}`, acepta);
 }
 
 export async function solicitudServicio(opc: { horas?: number; acepta?: boolean; numero?: string; domicilio?: boolean } = {}) {

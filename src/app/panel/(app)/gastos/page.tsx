@@ -26,7 +26,7 @@ export default async function Gastos({ searchParams }: { searchParams: Promise<{
           <Formulario accion={accionGasto} boton="Registrar" className="mt-3 grid gap-3 sm:grid-cols-2" reiniciar>
             <label className="sm:col-span-2">
               <span className="etiqueta-campo">Concepto</span>
-              <input name="concepto" required className="campo" placeholder="Ej.: pestañas postizas para novias" />
+              <input name="concepto" required minLength={3} maxLength={120} pattern=".*\p{L}.*" title="Debe llevar palabras, no solo números o símbolos." className="campo" placeholder="Ej.: pestañas postizas para novias" />
             </label>
             <label>
               <span className="etiqueta-campo">Categoría</span>
@@ -40,7 +40,7 @@ export default async function Gastos({ searchParams }: { searchParams: Promise<{
             </label>
             <label>
               <span className="etiqueta-campo">Monto (C$)</span>
-              <input name="monto" required inputMode="decimal" className="campo" />
+              <input name="monto" required inputMode="decimal" maxLength={12} pattern=" *[0-9][0-9,]*(\.[0-9]{1,2})? *" title="Escribe solo números, con hasta dos decimales (por ejemplo 1300 o 1300.50)." className="campo" />
             </label>
             <label>
               <span className="etiqueta-campo">Fecha</span>

@@ -25,11 +25,11 @@ export default async function PedidoPorClienta() {
               <div className="grid gap-3 sm:grid-cols-2">
                 <label>
                   <span className="etiqueta-campo">Nombre completo de la clienta</span>
-                  <input name="nombre" required className="campo" />
+                  <input name="nombre" required minLength={3} maxLength={100} autoComplete="name" pattern=" *\p{L}[\p{L}\p{M}'.\-]+( +[\p{L}\p{M}'.\-]+)+ *" title="Escribe nombre y apellido, solo con letras (sin números ni símbolos)." className="campo" />
                 </label>
                 <label>
                   <span className="etiqueta-campo">WhatsApp</span>
-                  <input name="whatsapp" required inputMode="tel" className="campo" placeholder="8888 8888" />
+                  <input name="whatsapp" required inputMode="tel" maxLength={20} pattern=" *\+?[0-9 \(\)\-.]{8,20} *" title="Escribe un número de WhatsApp con dígitos, por ejemplo 8888 1234." className="campo" placeholder="8888 8888" />
                 </label>
               </div>
               <label className="flex items-start gap-3 rounded-xl bg-crema-100 p-3 text-sm">

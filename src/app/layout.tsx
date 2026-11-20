@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import "./globals.css";
+import { MensajesValidacion } from "@/componentes/MensajesValidacion";
 
 export const metadata: Metadata = {
   title: { default: "Beauty Studio · Andrea Paola", template: "%s · Beauty Studio" },
@@ -11,7 +12,10 @@ export const viewport: Viewport = { width: "device-width", initialScale: 1, them
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
     <html lang="es">
-      <body className="min-h-dvh antialiased">{children}</body>
+      <body className="min-h-dvh antialiased">
+        <MensajesValidacion />
+        {children}
+      </body>
     </html>
   );
 }

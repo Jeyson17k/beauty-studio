@@ -13,11 +13,11 @@ function CamposServicio({ s }: { s?: { id: number; nombre: string; descripcion: 
       <div className="grid gap-3 sm:grid-cols-2">
         <label>
           <span className="etiqueta-campo">Nombre</span>
-          <input name="nombre" required maxLength={80} defaultValue={s?.nombre} className="campo" />
+          <input name="nombre" required minLength={3} maxLength={80} pattern=".*\p{L}.*" title="Debe llevar palabras, no solo números o símbolos." defaultValue={s?.nombre} className="campo" />
         </label>
         <label>
           <span className="etiqueta-campo">Precio de referencia (C$, opcional)</span>
-          <input name="precio_base" inputMode="decimal" defaultValue={s?.precio_base ?? ""} className="campo" />
+          <input name="precio_base" inputMode="decimal" maxLength={12} pattern=" *[0-9][0-9,]*(\.[0-9]{1,2})? *" title="Escribe solo números, con hasta dos decimales (por ejemplo 1300 o 1300.50)." defaultValue={s?.precio_base ?? ""} className="campo" />
         </label>
         <label className="sm:col-span-2">
           <span className="etiqueta-campo">Descripción</span>
