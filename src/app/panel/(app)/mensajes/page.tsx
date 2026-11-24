@@ -37,7 +37,7 @@ export default async function Mensajes({ searchParams }: { searchParams: Promise
         {simulado ? (
           <Aviso tono="warn">
             Modo simulado (entorno de prueba): no se conecta con Meta. El aviso «enviado» se simula a los 2 segundos; los números que terminan en 9999 simulan un
-            envío fallido. La conexión con la API real y el número de Andrea están pendientes de probar.
+            envío fallido. La conexión con la API real y el número del negocio están pendientes de probar.
           </Aviso>
         ) : (
           <Aviso tono="info">Modo Cloud API: los estados llegan por el webhook /api/whatsapp/webhook.</Aviso>

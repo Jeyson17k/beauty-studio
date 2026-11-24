@@ -89,7 +89,7 @@ export default async function DetalleSolicitud({ params }: { params: Promise<{ i
               <Dato etiqueta="Mensajes por WhatsApp">
                 {s.acepta_whatsapp ? `Aceptó el ${fechaHora(s.acepta_whatsapp_en)}` : "No aceptó: usar envío manual"}
               </Dato>
-              <Dato etiqueta="Origen">{s.registro_directo ? "Registro directo de Andrea" : `Web · ${fechaHora(s.creado_en)}`}</Dato>
+              <Dato etiqueta="Origen">{s.registro_directo ? "Registro directo del negocio" : `Web · ${fechaHora(s.creado_en)}`}</Dato>
               {s.descripcion && (
                 <div className="sm:col-span-2">
                   <Dato etiqueta="Descripción">{s.descripcion}</Dato>
@@ -402,7 +402,7 @@ export default async function DetalleSolicitud({ params }: { params: Promise<{ i
                     <span className="etiqueta-campo">¿Quién cancela?</span>
                     <select name="origen" className="campo">
                       <option value="clienta">La clienta (no se devuelve el anticipo)</option>
-                      <option value="andrea">Andrea</option>
+                      <option value="negocio">El negocio</option>
                     </select>
                   </label>
                 )}

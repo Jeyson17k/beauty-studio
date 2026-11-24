@@ -218,7 +218,7 @@ export function ClaveEmergencia({ tiene }: { tiene: boolean }) {
   return (
     <div className="mt-3 space-y-3">
       <p className="text-sm text-gris-600">
-        Si algún día Andrea pierde el acceso a su correo <strong>y</strong> olvida la contraseña, esta clave permite registrar un correo nuevo desde el inicio de sesión.
+        Si algún día se pierde el acceso al correo <strong>y</strong> olvida la contraseña, esta clave permite registrar un correo nuevo desde el inicio de sesión.
         Se muestra una sola vez: anótala y guárdala fuera del sistema.
       </p>
       <p className={`rounded-xl px-4 py-2 text-sm ${tiene ? "bg-ok-100 text-ok-700" : "bg-aviso-100 text-aviso-700"}`}>

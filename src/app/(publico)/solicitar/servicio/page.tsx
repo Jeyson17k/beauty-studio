@@ -17,7 +17,7 @@ export default async function SolicitarServicio({ searchParams }: { searchParams
   const [{ servicio }, servicios, clienta, casillas] = await Promise.all([searchParams, serviciosActivos(), sesionClienta(), datosCalendario(false)]);
   return (
     <div>
-      <EncabezadoPagina titulo="Solicitar servicio" subtitulo="Tu solicitud queda pendiente de revisión. Andrea te enviará la cotización por WhatsApp.">
+      <EncabezadoPagina titulo="Solicitar servicio" subtitulo="Tu solicitud queda pendiente de revisión. Te enviaremos la cotización por WhatsApp.">
         {/* RF-06: selección del tipo de solicitud */}
         <div className="mt-5 grid max-w-sm grid-cols-2 gap-1 rounded-full bg-white/10 p-1 text-center text-sm font-semibold">
           <span className="oro-degradado rounded-full py-2 text-negro-950">Servicios de belleza</span>
@@ -53,7 +53,7 @@ export default async function SolicitarServicio({ searchParams }: { searchParams
           <CamposLugar />
           <label className="block">
             <span className="etiqueta-campo">Descripción (opcional)</span>
-            <textarea name="descripcion" maxLength={300} rows={3} className="campo" placeholder="Cuéntale a Andrea el estilo que buscas o el tipo de evento." />
+            <textarea name="descripcion" maxLength={300} rows={3} className="campo" placeholder="Cuéntanos el estilo que buscas o el tipo de evento." />
           </label>
           <label className="block">
             <span className="etiqueta-campo">Fotos de referencia (opcional, hasta 5)</span>
@@ -75,10 +75,10 @@ function PasosLaterales() {
       <div className="mt-5">
         <PildorasNumeradas
           items={[
-            "Andrea revisa tu solicitud.",
+            "El negocio revisa tu solicitud.",
             "Te envía la cotización por WhatsApp.",
             "Pagas el anticipo del 10 % en 24 horas.",
-            "Andrea verifica el pago y confirma tu cita.",
+            "El negocio verifica el pago y confirma tu cita.",
           ]}
         />
       </div>

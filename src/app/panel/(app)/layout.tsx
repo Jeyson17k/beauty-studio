@@ -10,7 +10,7 @@ export const dynamic = "force-dynamic";
 
 export const metadata = { robots: { index: false, follow: false } };
 
-// Panel de Andrea (A02 a A22). El menú lateral sigue el prototipo de Figma (M10). Las rutas están protegidas por el middleware y aquí se vuelve a comprobar la sesión.
+// Panel de la administradora (A02 a A22). El menú lateral sigue el prototipo de Figma (M10). Las rutas están protegidas por el middleware y aquí se vuelve a comprobar la sesión.
 export default async function LayoutPanel({ children }: { children: React.ReactNode }) {
   const s = await sesionAdmin();
   if (!s) redirect("/panel/login");
@@ -28,7 +28,7 @@ export default async function LayoutPanel({ children }: { children: React.ReactN
           <Link href="/cambiar-perfil?a=clienta" className="mb-2 block font-semibold text-oro-300 hover:underline">
             Ver la página como clienta
           </Link>
-          <p>Andrea · {s.rol}</p>
+          <p>{s.usuario} · {s.rol}</p>
           <form action={accionLogout}>
             <button className="mt-2 font-semibold text-oro-300 hover:underline">Cerrar sesión</button>
           </form>

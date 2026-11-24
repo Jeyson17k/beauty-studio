@@ -1,4 +1,4 @@
-// Cuenta de Andrea: correo de recuperación y códigos de un solo uso enviados por correo.
+// Cuenta de la administradora: correo de recuperación y códigos de un solo uso enviados por correo.
 // Sirve para (1) recuperar la contraseña desde el inicio de sesión, (2) cambiarla desde Configuración y
 // (3) registrar o cambiar el correo (el código llega al correo nuevo para comprobar que es de ella).
 import bcrypt from "bcryptjs";
@@ -63,7 +63,7 @@ export async function enviarCodigo(usuarioId: number, proposito: Proposito, dest
   const r = await enviarCorreo({
     para: destino,
     asunto: t.asunto,
-    texto: `Hola, Andrea.\n\n${t.intro}\n\nTu código es: ${codigo}\n\nVale ${VIGENCIA_MIN} minutos y solo se puede usar una vez. Si tú no lo pediste, ignora este mensaje: no se cambia nada.\n\nBeauty Studio`,
+    texto: `Hola.\n\n${t.intro}\n\nTu código es: ${codigo}\n\nVale ${VIGENCIA_MIN} minutos y solo se puede usar una vez. Si tú no lo pediste, ignora este mensaje: no se cambia nada.\n\nBeauty Studio`,
   });
   if (!r.ok) {
     await q("UPDATE codigo_cuenta SET usado_en = now() WHERE usuario_id = $1 AND usado_en IS NULL", [usuarioId]);
@@ -154,7 +154,7 @@ export async function fijarUsuario(usuarioId: number, nuevo: string) {
 
 /**
  * «¿Olvidaste tu usuario?»: envía el usuario al correo registrado. Cuenta contra el límite de 5 envíos por hora
- * (se anota como un código ya usado) para que nadie pueda llenarle el correo a Andrea.
+ * (se anota como un código ya usado) para que nadie pueda llenarle el correo a la administradora.
  */
 export async function recordarUsuario(usuarioId: number, usuario: string, correo: string) {
   const rec = await q1<{ n: number }>("SELECT count(*)::int AS n FROM codigo_cuenta WHERE usuario_id = $1 AND solicitado_en > now() - interval '1 hour'", [usuarioId]);
@@ -163,13 +163,13 @@ export async function recordarUsuario(usuarioId: number, usuario: string, correo
   const r = await enviarCorreo({
     para: correo,
     asunto: TEXTOS.recordar.asunto,
-    texto: `Hola, Andrea.\n\nPediste recordar tu usuario del panel de Beauty Studio.\n\nTu usuario es: ${usuario}\n\nSi tú no lo pediste, ignora este mensaje.\n\nBeauty Studio`,
+    texto: `Hola.\n\nPediste recordar tu usuario del panel de Beauty Studio.\n\nTu usuario es: ${usuario}\n\nSi tú no lo pediste, ignora este mensaje.\n\nBeauty Studio`,
   });
   if (!r.ok) throw new ReglaError("No pudimos enviar el correo. Revisa la configuración del correo e inténtalo de nuevo.");
   return { simulado: r.simulado && modoCorreo() === "simulado", usuario };
 }
 
-// ---------- Clave de emergencia (si Andrea pierde el acceso a su correo) ----------
+// ---------- Clave de emergencia (si la administradora pierde el acceso a su correo) ----------
 // Una clave larga que se muestra una sola vez; solo se guarda su huella. Sirve para registrar un correo nuevo desde
 // el inicio de sesión cuando ya no tiene el correo ni la contraseña. Se gasta al usarla y hay que generar otra.
 const ALFABETO = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"; // sin O, I, 0, 1 para que no se confundan al copiarla

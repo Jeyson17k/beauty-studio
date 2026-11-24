@@ -15,20 +15,20 @@ beforeAll(async () => {
 afterAll(() => pool.end());
 beforeEach(() => q("DELETE FROM codigo_cuenta"));
 
-const pedir = async (p: "recuperar" | "cambiar" | "correo" | "usuario" = "cambiar", destino = "andrea@ejemplo.com") => (await enviarCodigo(UID, p, destino)).codigo!;
+const pedir = async (p: "recuperar" | "cambiar" | "correo" | "usuario" = "cambiar", destino = "admin@ejemplo.com") => (await enviarCodigo(UID, p, destino)).codigo!;
 
-describe("Correo y códigos de la cuenta de Andrea", () => {
+describe("Correo y códigos de la cuenta de administración", () => {
   it("PF-44 · el correo se normaliza, se valida y se muestra oculto", () => {
-    expect(normalizarCorreo("  Andrea@Ejemplo.COM ")).toBe("andrea@ejemplo.com");
+    expect(normalizarCorreo("  Admin@Ejemplo.COM ")).toBe("admin@ejemplo.com");
     expect(() => normalizarCorreo("sin-arroba")).toThrow(/correo válido/);
-    expect(ocultarCorreo("andrea@gmail.com")).toBe("an****@gmail.com");
+    expect(ocultarCorreo("admin@gmail.com")).toBe("ad***@gmail.com");
   });
 
   it("PF-45 · un código correcto sirve una sola vez y no se guarda en claro", async () => {
     const cod = await pedir();
     const fila = await q1<{ codigo_hash: string }>("SELECT codigo_hash FROM codigo_cuenta");
     expect(fila!.codigo_hash).not.toContain(cod);
-    expect(await consumirCodigo(UID, "cambiar", cod)).toEqual({ destino: "andrea@ejemplo.com" });
+    expect(await consumirCodigo(UID, "cambiar", cod)).toEqual({ destino: "admin@ejemplo.com" });
     await expect(consumirCodigo(UID, "cambiar", cod)).rejects.toThrow(/ya no sirve/);
   });
 
@@ -61,7 +61,7 @@ describe("Correo y códigos de la cuenta de Andrea", () => {
 
   it("PF-50 · se piden como máximo 5 códigos por hora", async () => {
     for (let i = 0; i < MAX_POR_HORA; i++) await pedir();
-    await expect(enviarCodigo(UID, "cambiar", "andrea@ejemplo.com")).rejects.toThrow(/demasiados códigos/);
+    await expect(enviarCodigo(UID, "cambiar", "admin@ejemplo.com")).rejects.toThrow(/demasiados códigos/);
   });
 
   it("PF-51 · la contraseña nueva exige 10 caracteres y que coincidan", () => {
@@ -73,8 +73,8 @@ describe("Correo y códigos de la cuenta de Andrea", () => {
   it("PF-52 · tras confirmar el código se puede entrar con la contraseña nueva y no con la vieja", async () => {
     await consumirCodigo(UID, "cambiar", await pedir());
     await fijarPassword(UID, "una-clave-nueva-2026", "cambiar");
-    expect(await validarCredenciales("andrea", "una-clave-nueva-2026")).toMatchObject({ usuario: "andrea" });
-    expect(await validarCredenciales("andrea", "prueba-123456")).toBeNull();
+    expect(await validarCredenciales("admin", "una-clave-nueva-2026")).toMatchObject({ usuario: "admin" });
+    expect(await validarCredenciales("admin", "prueba-123456")).toBeNull();
     expect((await q1<{ n: number }>("SELECT count(*)::int AS n FROM auditoria WHERE accion = 'Cambiar contraseña por correo'"))!.n).toBe(1);
     await q("UPDATE usuario_admin SET hash_password = $1 WHERE id = $2", [await bcrypt.hash("prueba-123456", 4), UID]);
   });
@@ -89,25 +89,25 @@ describe("Correo y códigos de la cuenta de Andrea", () => {
   });
 
   it("PF-55 · el usuario nuevo se valida, no puede repetirse y se cambia solo con el código del correo", async () => {
-    expect(normalizarUsuario("  Andrea.Paola ")).toBe("andrea.paola");
+    expect(normalizarUsuario("  Admin.Nuevo ")).toBe("admin.nuevo");
     expect(() => normalizarUsuario("ab")).toThrow(/4 a 30/);
     expect(() => normalizarUsuario("con espacio")).toThrow(/4 a 30/);
     await q("INSERT INTO usuario_admin (usuario, hash_password, rol, activo) VALUES ('ocupado', 'x', 'Administradora', true) ON CONFLICT DO NOTHING");
     await expect(validarUsuarioNuevo(UID, "Ocupado")).rejects.toThrow(/ya está en uso/);
-    await expect(validarUsuarioNuevo(UID, "andrea")).rejects.toThrow(/actual/);
+    await expect(validarUsuarioNuevo(UID, "admin")).rejects.toThrow(/actual/);
     await consumirCodigo(UID, "usuario", await pedir("usuario"));
-    expect(await fijarUsuario(UID, "andrea.paola")).toBe("andrea.paola");
-    expect(await validarCredenciales("andrea.paola", "prueba-123456")).toMatchObject({ uid: UID });
-    expect(await validarCredenciales("andrea", "prueba-123456")).toBeNull();
+    expect(await fijarUsuario(UID, "admin.nuevo")).toBe("admin.nuevo");
+    expect(await validarCredenciales("admin.nuevo", "prueba-123456")).toMatchObject({ uid: UID });
+    expect(await validarCredenciales("admin", "prueba-123456")).toBeNull();
     expect((await q1<{ n: number }>("SELECT count(*)::int AS n FROM auditoria WHERE accion = 'Cambiar nombre de usuario por correo'"))!.n).toBe(1);
-    await q("UPDATE usuario_admin SET usuario = 'andrea' WHERE id = $1", [UID]);
+    await q("UPDATE usuario_admin SET usuario = 'admin' WHERE id = $1", [UID]);
   });
 
   it("PF-56 · «olvidé mi usuario» envía el usuario al correo y cuenta contra el límite por hora", async () => {
-    const r = await recordarUsuario(UID, "andrea", "andrea@ejemplo.com");
-    expect(r).toMatchObject({ simulado: true, usuario: "andrea" });
-    for (let i = 1; i < MAX_POR_HORA; i++) await recordarUsuario(UID, "andrea", "andrea@ejemplo.com");
-    await expect(recordarUsuario(UID, "andrea", "andrea@ejemplo.com")).rejects.toThrow(/demasiados envíos/);
+    const r = await recordarUsuario(UID, "admin", "admin@ejemplo.com");
+    expect(r).toMatchObject({ simulado: true, usuario: "admin" });
+    for (let i = 1; i < MAX_POR_HORA; i++) await recordarUsuario(UID, "admin", "admin@ejemplo.com");
+    await expect(recordarUsuario(UID, "admin", "admin@ejemplo.com")).rejects.toThrow(/demasiados envíos/);
     await expect(consumirCodigo(UID, "recordar", "000000")).rejects.toThrow(/ya no sirve/);
   });
 
@@ -118,18 +118,18 @@ describe("Correo y códigos de la cuenta de Andrea", () => {
     const fila = await q1<{ clave_emergencia_hash: string }>("SELECT clave_emergencia_hash FROM usuario_admin WHERE id = $1", [UID]);
     expect(fila!.clave_emergencia_hash).not.toContain(clave.replace(/-/g, ""));
     expect(await tieneClaveEmergencia(UID)).toBe(true);
-    await expect(verificarClaveEmergencia("andrea", "AAAA-AAAA-AAAA-AAAA")).rejects.toThrow(/no son correctos/);
+    await expect(verificarClaveEmergencia("admin", "AAAA-AAAA-AAAA-AAAA")).rejects.toThrow(/no son correctos/);
     await expect(verificarClaveEmergencia("nadie", clave)).rejects.toThrow(/no son correctos/);
-    expect(await verificarClaveEmergencia(" Andrea ", clave.toLowerCase().replace(/-/g, " "))).toBe(UID); // tolera minúsculas y separadores
+    expect(await verificarClaveEmergencia(" Admin ", clave.toLowerCase().replace(/-/g, " "))).toBe(UID); // tolera minúsculas y separadores
     const cod = await pedir("correo", "nuevo@ejemplo.com");
     expect(await consumirCodigo(UID, "correo", cod)).toEqual({ destino: "nuevo@ejemplo.com" });
     await guardarCorreo(UID, "nuevo@ejemplo.com");
     await gastarClaveEmergencia(UID);
-    await expect(verificarClaveEmergencia("andrea", clave)).rejects.toThrow(/no son correctos/);
+    await expect(verificarClaveEmergencia("admin", clave)).rejects.toThrow(/no son correctos/);
     expect(await tieneClaveEmergencia(UID)).toBe(false);
     const nueva = await generarClaveEmergencia(UID);
     expect(nueva).not.toBe(clave);
-    await expect(verificarClaveEmergencia("andrea", clave)).rejects.toThrow();
+    await expect(verificarClaveEmergencia("admin", clave)).rejects.toThrow();
     await q("UPDATE usuario_admin SET correo = NULL, clave_emergencia_hash = NULL WHERE id = $1", [UID]);
   });
 });

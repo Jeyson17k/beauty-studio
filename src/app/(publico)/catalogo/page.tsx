@@ -19,7 +19,7 @@ export default async function Catalogo({ searchParams }: { searchParams: Promise
   const enCarrito = agregado && clienta ? await cantidadCarrito(clienta.cid) : 0;
   return (
     <div>
-      <EncabezadoPagina titulo="Productos de belleza" subtitulo="Arma tu pedido y envíaselo a Andrea por WhatsApp. Retiro en el local o delivery.">
+      <EncabezadoPagina titulo="Productos de belleza" subtitulo="Arma tu pedido y envíalo al negocio por WhatsApp. Retiro en el local o delivery.">
         <form className="mt-5 flex max-w-xl gap-2">
           <input name="q" defaultValue={sp.q} placeholder="Buscar producto" className="campo mt-0 border-white/20 bg-white/10 text-white placeholder:text-white/50" />
           <button className="btn oro-degradado px-5 text-negro-950">Buscar</button>

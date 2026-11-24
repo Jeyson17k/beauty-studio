@@ -24,7 +24,7 @@ export default async function Disponibilidad({ searchParams }: { searchParams: P
     <div>
       <EncabezadoPagina
         titulo="Disponibilidad"
-        subtitulo="Estos horarios ya están apartados o confirmados. Cualquier otra hora puede solicitarse; Andrea la confirma en la cotización."
+        subtitulo="Estos horarios ya están apartados o confirmados. Cualquier otra hora puede solicitarse; se confirma en la cotización."
       />
       <div className="contenedor py-8 md:py-12">
         <div className="flex flex-wrap items-center justify-between gap-3">

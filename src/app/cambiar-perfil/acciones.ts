@@ -1,5 +1,5 @@
 "use server";
-// Cambio de perfil de Andrea entre el panel de administración y la página de las clientas.
+// Cambio de perfil de la administradora entre el panel de administración y la página de las clientas.
 // Cada cambio, en cualquiera de los dos sentidos, pide la contraseña.
 import { redirect } from "next/navigation";
 import { aResultado } from "@/lib/errores";

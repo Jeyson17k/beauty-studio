@@ -3,6 +3,7 @@ import { AutoRefrescar } from "@/componentes/AutoRefrescar";
 import { Formulario } from "@/componentes/Formulario";
 import { Aviso, EncabezadoPanel } from "@/componentes/ui";
 import { ZONA } from "@/lib/tiempo";
+import { datosNegocio } from "@/lib/negocio";
 import { mostrarWhatsApp } from "@/lib/telefono";
 import { bandejaSimulada, modoWhatsApp, numeroPrueba } from "@/modulos/whatsapp/cliente";
 import { accionMensajePrueba } from "../../whatsapp-acciones";
@@ -14,7 +15,8 @@ const hora = (d: Date) => new Intl.DateTimeFormat("es-NI", { timeZone: ZONA, hou
 const dia = (d: Date) => new Intl.DateTimeFormat("es-NI", { timeZone: ZONA, weekday: "long", day: "numeric", month: "long" }).format(d);
 
 // Simulación del WhatsApp que recibe el número de prueba: todo lo que el sistema envía aparece aquí como en un teléfono.
-export default function TelefonoPrueba() {
+export default async function TelefonoPrueba() {
+  const negocio = await datosNegocio();
   const destino = numeroPrueba();
   const simulado = modoWhatsApp() === "simulado";
   const mensajes = bandejaSimulada()
@@ -39,7 +41,7 @@ export default function TelefonoPrueba() {
               <div className="flex items-center gap-3 bg-[#075e54] px-4 pb-3 pt-9 text-white">
                 <span className="grid h-10 w-10 place-items-center rounded-full border-2 border-oro-300 bg-negro-900 text-xs font-bold text-oro-300">AP</span>
                 <div className="leading-tight">
-                  <p className="text-[15px] font-semibold">Beauty Studio · Andrea Paola</p>
+                  <p className="text-[15px] font-semibold">{negocio.nombre}</p>
                   <p className="text-xs text-white/75">cuenta de empresa</p>
                 </div>
               </div>

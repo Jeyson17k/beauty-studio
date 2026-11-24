@@ -1,4 +1,4 @@
-// Validaciones comunes de los datos que escriben las clientas y Andrea (RNF-04).
+// Validaciones comunes de los datos que escriben las clientas y la administradora (RNF-04).
 // Todas lanzan ReglaError con un mensaje claro, que el formulario muestra sin perder lo escrito.
 import { ReglaError } from "./errores";
 

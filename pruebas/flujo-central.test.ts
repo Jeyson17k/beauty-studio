@@ -126,7 +126,7 @@ describe("Cotización y envío por WhatsApp (RF-10, RF-11, RF-33)", () => {
     expect(ev!.n).toBe(2);
   });
 
-  it("PF-10 · un envío fallido libera el apartado, vuelve a revisión y alerta a Andrea (RN-11.6, RN-09.7)", async () => {
+  it("PF-10 · un envío fallido libera el apartado, vuelve a revisión y alerta al negocio (RN-11.6, RN-09.7)", async () => {
     const s = await solicitudServicio();
     await guardarCotizacion(UID, s.id, 1300, 90, null);
     await enviarCotizacion(UID, s.id);
@@ -172,7 +172,7 @@ describe("Cotización y envío por WhatsApp (RF-10, RF-11, RF-33)", () => {
     expect(await estado(a.id)).toBe("Pendiente de pago");
   });
 
-  it("PF-14 · el envío manual inicia el plazo con la hora registrada por Andrea (RN-11.7, RN-12.1)", async () => {
+  it("PF-14 · el envío manual inicia el plazo con la hora registrada por el negocio (RN-11.7, RN-12.1)", async () => {
     const s = await solicitudServicio({ acepta: false });
     await guardarCotizacion(UID, s.id, 1000, 60, null);
     const enviado = new Date(Date.now() - 30_000);
@@ -357,7 +357,7 @@ describe("Recordatorios (RF-19)", () => {
   it("PF-43 · genera un solo recordatorio en el panel para citas confirmadas próximas y ninguno para canceladas (RN-19.1, RN-19.3, RN-19.4)", async () => {
     const s = await hastaConfirmada({ horas: 10 });
     const c = await hastaConfirmada({ horas: 12 });
-    await rechazarOCancelar(UID, c.id, "Prueba de recordatorio", "andrea");
+    await rechazarOCancelar(UID, c.id, "Prueba de recordatorio", "negocio");
     await generarRecordatorios();
     await generarRecordatorios();
     const n = await q<{ mensaje: string }>("SELECT mensaje FROM notificacion WHERE tipo = 'Recordatorio'");

@@ -1,5 +1,5 @@
 "use server";
-// Acciones del panel de Andrea. Todas exigen la sesión de administradora (RN-02.4) y quedan en auditoría (RNF-08).
+// Acciones del panel de la administradora. Todas exigen la sesión de administradora (RN-02.4) y quedan en auditoría (RNF-08).
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { aResultado, ReglaError } from "@/lib/errores";
@@ -16,7 +16,7 @@ import { cargarComprobante, declararExpiracion, rechazarComprobante, registrarAt
 import { cancelarSesion, guardarCurso, guardarServicio, habilitarSesion, marcarSesionRealizada, programarSesion } from "@/modulos/catalogo";
 import { ejecutarTareas } from "@/modulos/planificador";
 import { guardarArchivo } from "@/lib/almacenamiento";
-import { cambiarEntrega, cancelarPedido, confirmarYReservar, pedidoPorAndrea, registrarPagoPedido } from "@/modulos/pedidos";
+import { cambiarEntrega, cancelarPedido, confirmarYReservar, pedidoPorNegocio, registrarPagoPedido } from "@/modulos/pedidos";
 import { eliminarGasto, eliminarProducto, guardarProducto, registrarAjuste, registrarEntrada, registrarGasto, registrarVentaDirecta } from "@/modulos/inventario";
 import type { EstadoForm } from "@/componentes/Formulario";
 
@@ -137,7 +137,7 @@ export async function accionExpirar(_: EstadoForm, fd: FormData) {
 
 export async function accionRechazarCancelar(_: EstadoForm, fd: FormData) {
   return ejecutar(async () => {
-    const nuevo = await rechazarOCancelar(await uid(), Number(fd.get("solicitud_id")), txt(fd, "motivo"), txt(fd, "origen") === "clienta" ? "clienta" : "andrea");
+    const nuevo = await rechazarOCancelar(await uid(), Number(fd.get("solicitud_id")), txt(fd, "motivo"), txt(fd, "origen") === "clienta" ? "clienta" : "negocio");
     return nuevo === "Rechazada" ? "Solicitud rechazada." : "Solicitud cancelada. Se liberó su horario o cupo; los pagos registrados se conservan.";
   }, ["/panel/solicitudes", "/panel/agenda"]);
 }
@@ -169,13 +169,13 @@ export async function accionRegistroDirecto(_: EstadoForm, fd: FormData): Promis
   redirect(`/panel/solicitudes/${id}`);
 }
 
-// ---------- Pedido registrado por Andrea a nombre de una clienta ----------
+// ---------- Pedido registrado por la administradora a nombre de una clienta ----------
 export async function accionPedidoPorClienta(_: EstadoForm, fd: FormData): Promise<EstadoForm> {
   let id: number;
   try {
     const ids = fd.getAll("producto_id").map(Number);
     const cantidades = fd.getAll("cantidad").map(Number);
-    id = await pedidoPorAndrea(await uid(), {
+    id = await pedidoPorNegocio(await uid(), {
       nombre: txt(fd, "nombre"), whatsapp: txt(fd, "whatsapp"), acepta: fd.get("acepta") === "on",
       lineas: ids.map((productoId, i) => ({ productoId, cantidad: Number.isInteger(cantidades[i]) ? cantidades[i] : 0 })),
       entrega: txt(fd, "lugar") === "domicilio" ? "delivery" : "retiro", direccion: txt(fd, "direccion"), referencia: txt(fd, "referencia"),
@@ -268,7 +268,7 @@ export async function accionSesion(_: EstadoForm, fd: FormData) {
       await marcarSesionRealizada(await uid(), id);
       return "Sesión marcada como realizada.";
     }
-    const n = await cancelarSesion(await uid(), id, txt(fd, "motivo") || "Cancelada por Andrea");
+    const n = await cancelarSesion(await uid(), id, txt(fd, "motivo") || "Cancelada por el negocio");
     return `Sesión cancelada. Inscripciones canceladas: ${n}.`;
   }, ["/cursos", "/panel/agenda"]);
 }
@@ -282,15 +282,22 @@ export async function accionLeerNotificaciones(fd: FormData) {
   revalidatePath("/panel", "layout");
 }
 
+const OPCIONALES: string[] = ["ciudad_negocio", "direccion_negocio", "whatsapp_negocio"];
+const CLAVES_TEXTO: string[] = ["nombre_negocio", "ciudad_negocio", "direccion_negocio", "datos_pago", "lugar_local", "whatsapp_negocio"];
+
 export async function accionGuardarConfig(_: EstadoForm, fd: FormData) {
   return ejecutar(async () => {
     const id = await uid();
     for (const clave of Object.keys(CONFIG_INICIAL) as ClaveConfig[]) {
       const v = txt(fd, clave);
-      if (!v) continue;
-      if (!["datos_pago", "lugar_local", "whatsapp_negocio"].includes(clave) && !(leerNumero(v) > 0)) throw new ReglaError(`Valor no válido para ${clave}: escribe un número mayor que cero.`);
-      if (clave === "whatsapp_negocio" && !normalizarWhatsApp(v)) throw new ReglaError("El WhatsApp del negocio no es válido (ejemplo: 8888 1234).");
-      if (clave === "datos_pago" || clave === "lugar_local") textoConLetras(v, clave === "datos_pago" ? "los datos de pago" : "el lugar del local", 5, 100);
+      // Los datos opcionales del negocio se pueden dejar vacíos; los demás parámetros vacíos no se tocan.
+      if (!v && !OPCIONALES.includes(clave)) continue;
+      if (v && !CLAVES_TEXTO.includes(clave) && !(leerNumero(v) > 0)) throw new ReglaError(`Valor no válido para ${clave}: escribe un número mayor que cero.`);
+      if (v && clave === "whatsapp_negocio" && !normalizarWhatsApp(v)) throw new ReglaError("El WhatsApp del negocio no es válido (ejemplo: 8888 1234).");
+      if (v && (clave === "datos_pago" || clave === "lugar_local")) textoConLetras(v, clave === "datos_pago" ? "los datos de pago" : "el lugar del local", 5, 100);
+      if (v && clave === "nombre_negocio") textoConLetras(v, "el nombre del negocio", 2, 40);
+      if (v && clave === "ciudad_negocio") textoConLetras(v, "la ciudad", 2, 60);
+      if (v && clave === "direccion_negocio") textoConLetras(v, "la dirección", 5, 100);
       await q(
         "INSERT INTO configuracion (clave, valor, descripcion) VALUES ($1,$2,$3) ON CONFLICT (clave) DO UPDATE SET valor = EXCLUDED.valor",
         [clave, v.slice(0, 100), CONFIG_INICIAL[clave].descripcion],

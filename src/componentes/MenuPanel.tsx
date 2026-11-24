@@ -5,7 +5,7 @@ import { usePathname } from "next/navigation";
 
 type Opcion = { href: string; texto: string; rutas: string[] };
 
-// Menú lateral del panel de Andrea: los 5 apartados del prototipo de Figma (M10) y, debajo, «Más opciones».
+// Menú lateral del panel de la administradora: los 5 apartados del prototipo de Figma (M10) y, debajo, «Más opciones».
 const PRINCIPAL: Opcion[] = [
   { href: "/panel", texto: "Panel de inicio", rutas: [] },
   { href: "/panel/solicitudes", texto: "Solicitudes", rutas: ["/panel/solicitudes"] },

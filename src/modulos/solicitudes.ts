@@ -99,7 +99,7 @@ export async function registrarSolicitudCurso(
   });
 }
 
-/** CU-12: cotización. Andrea fija el precio; el sistema calcula 10 % de anticipo y el saldo (RN-10.3). No aparta ni inicia plazo (RN-10.4). */
+/** CU-12: cotización. la administradora fija el precio; el sistema calcula 10 % de anticipo y el saldo (RN-10.3). No aparta ni inicia plazo (RN-10.4). */
 export async function guardarCotizacion(uid: number, solicitudId: number, precio: number, duracionMin: number, trasladoMin: number | null) {
   monto(precio, "el precio total");
   const precioR = Math.round(precio * 100) / 100;
@@ -131,7 +131,7 @@ export async function guardarCotizacion(uid: number, solicitudId: number, precio
 }
 
 /** CU-23: rechazar (desde revisión) o cancelar (con reserva). Se conserva el registro y los pagos (RN-16.1 a RN-16.6). */
-export async function rechazarOCancelar(uid: number, solicitudId: number, motivo: string, origen: "clienta" | "andrea") {
+export async function rechazarOCancelar(uid: number, solicitudId: number, motivo: string, origen: "clienta" | "negocio") {
   if ((motivo || "").trim().length < 3) throw new ReglaError("Escribe el motivo", "RN-16.1");
   const m = textoConLetras(motivo, "el motivo", 3, 300);
   return tx(async (c) => {
@@ -153,7 +153,7 @@ export async function rechazarOCancelar(uid: number, solicitudId: number, motivo
   });
 }
 
-/** CU-24: registro directo de Andrea (RF-17). Sigue las mismas reglas de anticipo, plazo y confirmación (RN-17.5). */
+/** CU-24: registro directo de la administradora (RF-17). Sigue las mismas reglas de anticipo, plazo y confirmación (RN-17.5). */
 export async function registroDirecto(
   uid: number,
   d: { nombre: string; whatsapp: string; acepta: boolean; tipo: "servicio" | "curso"; servicioId?: number; cursoId?: number; sesionId?: number; inicio?: Date; descripcion?: string; fueraLocal?: boolean; direccion?: string; referencia?: string },
@@ -167,7 +167,7 @@ export async function registroDirecto(
   return registrarSolicitudCurso({ clienteId: cli.id, cursoId: d.cursoId, inicio: d.inicio, sesionId: d.sesionId, descripcion: d.descripcion }, { directo: true, uid });
 }
 
-/** CU-28: reprogramación autorizada por Andrea (RF-32). Conserva el anticipo y la fecha original. */
+/** CU-28: reprogramación autorizada por la administradora (RF-32). Conserva el anticipo y la fecha original. */
 export async function reprogramar(uid: number, solicitudId: number, motivo: string, nuevo: { inicio?: Date; sesionId?: number }) {
   return tx(async (c) => {
     const s = await q1<{ estado: string; tipo: string; sesion_id: number | null; inicio_solicitado: Date | null; modalidad: string | null; ses_inicio: Date | null }>(
@@ -207,7 +207,7 @@ export async function reprogramar(uid: number, solicitudId: number, motivo: stri
   });
 }
 
-/** RN-32.6: Andrea rechaza la nueva fecha; la reserva original sigue vigente. */
+/** RN-32.6: la administradora rechaza la nueva fecha; la reserva original sigue vigente. */
 export async function rechazarReprogramacion(uid: number, solicitudId: number, fechaPedida: Date, motivo: string) {
   return tx(async (c: PoolClient) => {
     const s = await q1<{ estado: string; inicio: Date }>(

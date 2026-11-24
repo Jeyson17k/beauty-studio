@@ -8,7 +8,7 @@ import { accionCambiarPerfil } from "./acciones";
 export const dynamic = "force-dynamic";
 export const metadata = { title: "Cambiar de perfil" };
 
-// Andrea cambia entre el panel de administración y la página de las clientas. Siempre se pide la contraseña.
+// La administradora cambia entre el panel de administración y la página de las clientas. Siempre se pide la contraseña.
 export default async function CambiarPerfil({ searchParams }: { searchParams: Promise<{ a?: string }> }) {
   const aClienta = (await searchParams).a === "clienta";
   const actual = aClienta ? await sesionAdmin() : await sesionPerfilClienta();

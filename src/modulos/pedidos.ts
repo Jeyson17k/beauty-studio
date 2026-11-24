@@ -1,5 +1,5 @@
 // MOD-07 Catálogo, carrito y pedidos (CU-07 a CU-09, CU-30, CU-31; RF-21 a RF-25).
-// El carrito no reserva existencias (RN-21.4). La reserva la registra Andrea y dura 48 h (RN-24.7).
+// El carrito no reserva existencias (RN-21.4). La reserva la registra la administradora y dura 48 h (RN-24.7).
 // La venta y la salida de inventario se registran una sola vez, al cerrar el pedido (RN-25.7).
 import { q, q1, tx, pool } from "@/lib/db";
 import { ReglaError } from "@/lib/errores";
@@ -100,17 +100,17 @@ export async function crearPedido(clienteId: string, d: { entrega: "delivery" | 
 }
 
 /**
- * Pedido registrado por Andrea a nombre de una clienta que no puede usar la página (por WhatsApp o en persona).
- * Sigue las mismas reglas que un pedido de la web: no aparta inventario hasta que Andrea lo confirme (RN-22.7).
+ * Pedido registrado por la administradora a nombre de una clienta que no puede usar la página (por WhatsApp o en persona).
+ * Sigue las mismas reglas que un pedido de la web: no aparta inventario hasta que la administradora lo confirme (RN-22.7).
  */
-export async function pedidoPorAndrea(
+export async function pedidoPorNegocio(
   uid: number,
   d: { nombre: string; whatsapp: string; acepta: boolean; lineas: { productoId: number; cantidad: number }[]; entrega: "delivery" | "retiro"; direccion?: string; referencia?: string },
 ) {
   const lineas = d.lineas.filter((l) => l.productoId && l.cantidad > 0);
   if (lineas.length === 0) throw new ReglaError("Elige al menos un producto.");
   const cli = await identificar(d.nombre, d.whatsapp, d.acepta);
-  // El carrito de la clienta se arma de cero con lo que Andrea registró.
+  // El carrito de la clienta se arma de cero con lo que la administradora registró.
   await q("DELETE FROM item_carrito WHERE carrito_id IN (SELECT id FROM carrito WHERE cliente_id = $1)", [cli.id]);
   for (const l of lineas) await cambiarCarrito(cli.id, l.productoId, l.cantidad);
   const id = await crearPedido(cli.id, { entrega: d.entrega, direccion: d.direccion, referencia: d.referencia });
@@ -144,13 +144,13 @@ export const listarPedidos = (estado?: string) =>
     [estado || null],
   );
 
-/** Mensaje que la clienta envía a Andrea por WhatsApp (RN-23.1, RN-23.2, RN-23.5). */
+/** Mensaje que la clienta envía a la administradora por WhatsApp (RN-23.1, RN-23.2, RN-23.5). */
 export async function mensajePedido(id: number) {
   const [p, items, cfg] = await Promise.all([pedido(id), detallePedido(id), leerConfig()]);
   if (!p) return null;
   const lineas = items.map((i) => `• ${i.nombre} ×${i.cantidad}: ${moneda(i.subtotal)}`).join("\n");
   const texto =
-    `Hola Andrea, soy ${p.clienta}. Quiero hacer el pedido #${p.id} de Beauty Studio:\n${lineas}\n` +
+    `Hola, soy ${p.clienta}. Quiero hacer el pedido #${p.id}:\n${lineas}\n` +
     `Total de productos: ${items.reduce((n, i) => n + i.cantidad, 0)}\n\n` +
     `Total de la compra: ${moneda(p.subtotal_productos)}\n\n` +
     `Entrega: ${p.tipo_entrega === "delivery" ? `delivery a ${p.direccion}${p.referencia ? ` (${p.referencia})` : ""}` : "retiro en el local"}\n` +
@@ -159,7 +159,7 @@ export async function mensajePedido(id: number) {
 }
 
 /**
- * Mensaje que recibe la clienta cuando Andrea confirma su pedido: total y, según la entrega, plazo para pagar y retirar (retiro en el local)
+ * Mensaje que recibe la clienta cuando la administradora confirma su pedido: total y, según la entrega, plazo para pagar y retirar (retiro en el local)
  * o costo del envío (delivery). Devuelve null si el pedido todavía no está confirmado.
  */
 export async function plantillaAvisoPedido(id: number, db?: Parameters<typeof q1>[2]): Promise<Plantilla | null> {
@@ -174,7 +174,7 @@ export async function plantillaAvisoPedido(id: number, db?: Parameters<typeof q1
 
 export type AvisoPedido = { enviado: true } | { enviado: false; motivo: string };
 
-/** Envía el aviso de pedido confirmado por la API. Su fallo no revierte la confirmación; Andrea puede avisar a mano con el texto del panel. */
+/** Envía el aviso de pedido confirmado por la API. Su fallo no revierte la confirmación; la administradora puede avisar a mano con el texto del panel. */
 async function avisarPedidoConfirmado(uid: number, id: number): Promise<AvisoPedido> {
   await asegurarAvisoPedido();
   const preparado = await tx(async (c) => {
@@ -202,8 +202,8 @@ async function avisarPedidoConfirmado(uid: number, id: number): Promise<AvisoPed
 }
 
 /**
- * CU-30: Andrea confirma y reserva. Verifica el disponible y aparta sin descontar el físico (RN-24.1 a RN-24.7).
- * El plazo de reserva (48 h) corre solo para retiro en el local: con delivery no hay plazo, porque Andrea hace la entrega.
+ * CU-30: la administradora confirma y reserva. Verifica el disponible y aparta sin descontar el físico (RN-24.1 a RN-24.7).
+ * El plazo de reserva (48 h) corre solo para retiro en el local: con delivery no hay plazo, porque la administradora hace la entrega.
  * Al terminar, avisa a la clienta por WhatsApp (total y plazo o costo de envío).
  */
 export async function confirmarYReservar(uid: number, id: number, costoEntrega: number | null) {

@@ -76,7 +76,7 @@ export async function solicitarCodigo(whatsapp: string): Promise<{ ok: boolean; 
   });
   if (!preparado) return { ok: true, mensaje: generico };
   const r = await despachar(preparado.mensajeId, w, preparado.plantilla);
-  if (!r.ok) return { ok: false, mensaje: "No fue posible verificar tu identidad por WhatsApp. Puedes consultar a Andrea por WhatsApp (RN-18.10)." };
+  if (!r.ok) return { ok: false, mensaje: "No fue posible verificar tu identidad por WhatsApp. Puedes consultar al negocio por WhatsApp (RN-18.10)." };
   return { ok: true, mensaje: generico };
 }
 

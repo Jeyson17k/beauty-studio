@@ -8,7 +8,7 @@ import { accionPedidoPorClienta } from "../../../acciones";
 export const dynamic = "force-dynamic";
 export const metadata = { title: "Pedido por una clienta" };
 
-// Pedido registrado por Andrea a nombre de una clienta (misma regla que la web: no aparta inventario hasta confirmarlo).
+// Pedido registrado por la administradora a nombre de una clienta (misma regla que la web: no aparta inventario hasta confirmarlo).
 export default async function PedidoPorClienta() {
   const lista = (await productos()).filter((p) => p.activo && p.visible_publico && p.disponible > 0);
   return (

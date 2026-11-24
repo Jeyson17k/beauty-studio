@@ -82,7 +82,7 @@ function simularAviso(idExterno: string, para: string) {
   }, 2000);
 }
 
-/** CU-14: Andrea presiona «Enviar cotización». Aparta el intervalo o cupo y deja el mensaje en cola (RN-11.3, RN-11.4). */
+/** CU-14: la administradora presiona «Enviar cotización». Aparta el intervalo o cupo y deja el mensaje en cola (RN-11.3, RN-11.4). */
 export async function enviarCotizacion(uid: number, solicitudId: number) {
   const cfg = await leerConfig();
   const preparado = await tx(async (c) => {
@@ -112,7 +112,7 @@ export async function enviarCotizacion(uid: number, solicitudId: number) {
   return despachar(preparado.mensajeId, preparado.para, preparado.plantilla);
 }
 
-/** CU-15: Envío manual. Andrea envió el mensaje desde su teléfono y registra la hora efectiva (RN-11.7, RN-12.1). */
+/** CU-15: Envío manual. la administradora envió el mensaje desde su teléfono y registra la hora efectiva (RN-11.7, RN-12.1). */
 export async function registrarEnvioManual(uid: number, solicitudId: number, enviadoEn: Date) {
   const cfg = await leerConfig();
   if (enviadoEn.getTime() > Date.now() + 60_000) throw new ReglaError("La hora del envío no puede estar en el futuro.");
@@ -165,7 +165,7 @@ export async function enviarAvisoConfirmacion(uid: number | null, solicitudId: n
   return despachar(preparado.mensajeId, preparado.para, preparado.plantilla);
 }
 
-/** Registra un aviso manual de confirmación (Andrea avisó desde su teléfono). */
+/** Registra un aviso manual de confirmación (la administradora avisó desde su teléfono). */
 export async function registrarAvisoManual(uid: number, solicitudId: number, enviadoEn: Date) {
   return tx(async (c) => {
     const d = await datosSolicitud(solicitudId, c);

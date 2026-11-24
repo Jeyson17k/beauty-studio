@@ -2,6 +2,9 @@
 import { q, Db, pool } from "./db";
 
 export const CONFIG_INICIAL = {
+  nombre_negocio: { valor: "Beauty Studio", descripcion: "Nombre del negocio: se muestra en el logo, el pie de la página y el título del navegador" },
+  ciudad_negocio: { valor: "", descripcion: "Ciudad o zona del negocio (opcional): se muestra bajo el logo" },
+  direccion_negocio: { valor: "", descripcion: "Dirección del local (opcional): se muestra en el pie de la página" },
   plazo_pago_horas: { valor: "24", descripcion: "Plazo para pagar el anticipo desde que WhatsApp informa el envío (RN-11.5)" },
   espera_envio_min: { valor: "15", descripcion: "Espera máxima del aviso «enviado» antes de marcar el envío como fallido (RN-11.6)" },
   codigo_vigencia_min: { valor: "10", descripcion: "Vigencia del código de verificación (RN-18.8)" },
@@ -10,9 +13,9 @@ export const CONFIG_INICIAL = {
   historial_inactividad_min: { valor: "15", descripcion: "Cierre por inactividad de la sesión de historial (RN-18.9)" },
   reserva_pedido_horas: { valor: "48", descripcion: "Vigencia de la reserva de productos de un pedido (RN-24.7)" },
   recordatorio_horas: { valor: "24", descripcion: "Anticipación de los recordatorios del panel (RF-19)" },
-  datos_pago: { valor: "la cuenta que Andrea indique por este chat", descripcion: "Texto de la variable {{6}} de la plantilla de cotización" },
-  whatsapp_negocio: { valor: "+50586190898", descripcion: "WhatsApp del negocio al que la clienta envía su pedido (RF-23)" },
-  lugar_local: { valor: "mi salón en Los Cedros, León", descripcion: "Lugar de atención en el aviso de confirmación" },
+  datos_pago: { valor: "la cuenta que te indiquemos por este chat", descripcion: "Texto de la variable {{6}} de la plantilla de cotización" },
+  whatsapp_negocio: { valor: "", descripcion: "WhatsApp del negocio al que la clienta envía su pedido (RF-23)" },
+  lugar_local: { valor: "nuestro local", descripcion: "Lugar de atención en el aviso de confirmación" },
 } as const;
 
 export type ClaveConfig = keyof typeof CONFIG_INICIAL;

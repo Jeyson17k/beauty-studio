@@ -1,5 +1,5 @@
 "use server";
-// Contraseña y correo de Andrea con códigos de un solo uso enviados por correo (ver modulos/cuenta.ts).
+// Contraseña y correo de la administradora con códigos de un solo uso enviados por correo (ver modulos/cuenta.ts).
 import { revalidatePath } from "next/cache";
 import { aResultado, ReglaError } from "@/lib/errores";
 import { q1 } from "@/lib/db";
@@ -186,7 +186,7 @@ export async function accionCorreoPrueba(): Promise<EstadoForm> {
     const id = await uid();
     const u = await usuarioPorId(id);
     if (!u?.correo) throw new ReglaError("Primero registra tu correo de recuperación.");
-    const r = await enviarCorreo({ para: u.correo, asunto: "Correo de prueba · Beauty Studio", texto: "Hola, Andrea.\n\nSi lees esto, el envío de correos de Beauty Studio funciona.\n\nBeauty Studio" });
+    const r = await enviarCorreo({ para: u.correo, asunto: "Correo de prueba · Beauty Studio", texto: "Hola.\n\nSi lees esto, el envío de correos de Beauty Studio funciona.\n\nBeauty Studio" });
     if (!r.ok) throw new ReglaError(`No se pudo enviar. Modo de correo: ${modoCorreo()}. Revisa las claves en el archivo .env.local.`);
     return { ok: true, mensaje: r.simulado ? "Modo de prueba: no salió ningún correo real (MAIL_MODE=simulado). Mira la consola del servidor." : `Correo de prueba enviado a ${ocultarCorreo(u.correo)}.` };
   } catch (e) {

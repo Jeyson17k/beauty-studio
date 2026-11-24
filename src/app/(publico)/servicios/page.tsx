@@ -14,7 +14,7 @@ export default async function Servicios() {
     <div>
       <EncabezadoPagina
         titulo="Servicios de belleza"
-        subtitulo="El precio final lo define Andrea en tu cotización, según el trabajo, las fotos de referencia y el lugar."
+        subtitulo="El precio final se define en tu cotización, según el trabajo, las fotos de referencia y el lugar."
       />
       <div className="contenedor grid gap-5 py-8 sm:grid-cols-2 md:py-12 lg:grid-cols-3">
         {servicios.map((s) => (

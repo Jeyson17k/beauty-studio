@@ -55,7 +55,7 @@ describe("Cursos grupales e individuales", () => {
   it("PF-32 · cancelar la sesión libera su intervalo y cancela las inscripciones (RN-04.10)", async () => {
     const sid = await programarSesion(UID, GRUPAL, horasDesdeAhora(70), 3, true);
     const a = await inscribir(sid);
-    const canceladas = await cancelarSesion(UID, sid, "Andrea enfermó");
+    const canceladas = await cancelarSesion(UID, sid, "La docente enfermó");
     expect(canceladas).toBe(1);
     expect(await estado(a)).toBe("Cancelada");
     const ag = await q1<{ estado: string }>("SELECT estado FROM actividad_agenda WHERE sesion_id = $1", [sid]);

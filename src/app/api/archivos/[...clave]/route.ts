@@ -1,4 +1,4 @@
-// Archivos privados (fotos de referencia y comprobantes). Solo para Andrea (protegido en middleware).
+// Archivos privados (fotos de referencia y comprobantes). Solo para la administradora (protegido en middleware).
 import { NextRequest, NextResponse } from "next/server";
 import { leerArchivo } from "@/lib/almacenamiento";
 import { sesionAdmin } from "@/lib/sesion";

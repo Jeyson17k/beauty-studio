@@ -17,7 +17,7 @@ export function CamposIdentificacion({ conTitulo = true }: { conTitulo?: boolean
       </label>
       <label className="flex items-start gap-3 rounded-xl bg-crema-100 p-3 text-sm">
         <input type="checkbox" name="acepta" defaultChecked className="mt-1 h-4 w-4 accent-[#7a5c24]" />
-        <span>Acepto recibir por WhatsApp la cotización y el aviso de confirmación de mis solicitudes. Puedes desmarcarlo: Andrea te escribirá ella misma.</span>
+        <span>Acepto recibir por WhatsApp la cotización y el aviso de confirmación de mis solicitudes. Puedes desmarcarlo: te escribiremos nosotros.</span>
       </label>
     </fieldset>
   );
@@ -47,7 +47,7 @@ export function CamposLugar({ etiquetas = ["En el salón", "A domicilio"] }: { e
             <span className="etiqueta-campo">Referencia</span>
             <input name="referencia" maxLength={150} pattern=".*\p{L}.*" title="Debe llevar palabras, no solo números o símbolos." className="campo" placeholder="Ej.: frente al parque, portón negro" />
           </label>
-          {etiquetas[0] === "En el salón" && <p className="ayuda">Andrea suma el tiempo de traslado a la duración de la atención.</p>}
+          {etiquetas[0] === "En el salón" && <p className="ayuda">Se suma el tiempo de traslado a la duración de la atención.</p>}
         </div>
       )}
     </fieldset>

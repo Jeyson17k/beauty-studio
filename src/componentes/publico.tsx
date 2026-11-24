@@ -1,17 +1,19 @@
 // Piezas visuales de la parte pública (clientas). Estilo inspirado en el video de referencia
 // (títulos grandes en mayúsculas, insignias hexagonales numeradas, cintas y píldoras),
-// con los colores de la marca Beauty Studio: negro, oro y crema. El panel de Andrea no las usa.
+// con los colores de la marca Beauty Studio: negro, oro y crema. El panel de administración no las usa.
 import Link from "next/link";
+import { inicialesDe } from "@/lib/negocio";
 
-export function LogoPublico() {
+export function LogoPublico({ nombre = "Beauty Studio", ciudad = "", iniciales }: { nombre?: string; ciudad?: string; iniciales?: string }) {
+  const sigla = iniciales ?? inicialesDe(nombre);
   return (
     <span className="flex items-center gap-2.5">
       <span className="grid h-10 w-10 place-items-center rounded-full border-2 border-oro-300 bg-negro-950 font-titulo text-sm font-semibold tracking-wider text-oro-300">
-        AP
+        {sigla}
       </span>
       <span className="leading-none">
-        <span className="block font-titulo text-[17px] font-semibold uppercase tracking-[0.12em] text-white">Beauty Studio</span>
-        <span className="mt-1 block text-[10px] uppercase tracking-[0.25em] text-oro-300">Andrea Paola</span>
+        <span className="block font-titulo text-[17px] font-semibold uppercase tracking-[0.12em] text-white">{nombre}</span>
+        {ciudad && <span className="mt-1 block text-[10px] uppercase tracking-[0.25em] text-oro-300">{ciudad}</span>}
       </span>
     </span>
   );
@@ -96,25 +98,30 @@ export function PildorasNumeradas({ items, destacado = 0, oscuro = true }: { ite
   );
 }
 
-export function PiePublico({ whatsapp }: { whatsapp: string }) {
-  const numero = whatsapp.replace("+", "");
+export function PiePublico({ nombre = "Beauty Studio", ciudad = "", direccion = "", whatsapp = "" }: { nombre?: string; ciudad?: string; direccion?: string; whatsapp?: string }) {
+  const numero = whatsapp.replace(/\D/g, "");
   return (
     <footer className="bg-negro-950 text-white/70">
       <div className="contenedor grid gap-8 py-10 text-sm md:grid-cols-3">
         <div>
-          <LogoPublico />
-          <p className="mt-4 max-w-xs">Maquillaje, peinado y cursos de maquillaje para tu momento especial.</p>
+          <LogoPublico nombre={nombre} ciudad={ciudad} />
+          <p className="mt-4 max-w-xs">Servicios de belleza, productos y cursos para tu momento especial.</p>
         </div>
         <div>
           <p className="font-titulo text-sm font-semibold uppercase tracking-[0.18em] text-oro-300">Visítanos</p>
-          <p className="mt-3">Los Cedros, Carretera Vieja a León, Nicaragua</p>
-          <p className="mt-1">Atención en el salón y a domicilio</p>
+          {direccion && <p className="mt-3">{direccion}</p>}
+          {ciudad && <p className={direccion ? "mt-1" : "mt-3"}>{ciudad}</p>}
+          <p className="mt-1">Atención en el local y a domicilio</p>
         </div>
         <div>
           <p className="font-titulo text-sm font-semibold uppercase tracking-[0.18em] text-oro-300">Escríbenos</p>
-          <a href={`https://wa.me/${numero}`} target="_blank" rel="noreferrer" className="mt-3 inline-block hover:text-oro-200">
-            WhatsApp {whatsapp.replace(/^\+505(\d{4})(\d{4})$/, "+505 $1-$2")}
-          </a>
+          {numero ? (
+            <a href={`https://wa.me/${numero}`} target="_blank" rel="noreferrer" className="mt-3 inline-block hover:text-oro-200">
+              WhatsApp {whatsapp.replace(/^\+505(\d{4})(\d{4})$/, "+505 $1-$2")}
+            </a>
+          ) : (
+            <p className="mt-3">Solicita tu cotización en línea y te escribimos por WhatsApp.</p>
+          )}
           <div className="mt-4 flex flex-wrap gap-2">
             <Link href="/solicitar/servicio" className="btn oro-degradado px-4 py-2 text-xs text-negro-950">
               Solicitar cotización
@@ -125,7 +132,7 @@ export function PiePublico({ whatsapp }: { whatsapp: string }) {
           </div>
         </div>
       </div>
-      <p className="border-t border-white/10 py-4 text-center text-xs text-white/40">© {new Date().getFullYear()} Andrea Paola · Beauty Studio</p>
+      <p className="border-t border-white/10 py-4 text-center text-xs text-white/40">© {new Date().getFullYear()} {nombre}</p>
     </footer>
   );
 }

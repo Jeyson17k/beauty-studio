@@ -1,9 +1,9 @@
 # Beauty Studio · Sistema web
 
-Sistema de información web del salón de Andrea Paola (Los Cedros, León). Proyecto de Ingeniería de Software I, UNI, grupo 3M1-SIS-S.
+Sistema de información web para negocios de belleza (servicios, cursos y productos). Proyecto de Ingeniería de Software I, UNI, grupo 3M1-SIS-S.
 
 - **Clienta (móvil):** servicios, cursos y sesiones, horarios ocupados, solicitudes con fotos de referencia, inscripciones, catálogo, carrito, pedido por WhatsApp e historial con código de verificación.
-- **Andrea (panel):** solicitudes, cotización con anticipo del 10 %, envío de la cotización por WhatsApp (API o manual), comprobantes, confirmación, plazo vencido, reprogramación, atención y saldo, agenda, cursos y sesiones, pedidos con reserva de 48 h, inventario, ventas, gastos, reportes, mensajes y auditoría.
+- **Administración (panel):** solicitudes, cotización con anticipo del 10 %, envío de la cotización por WhatsApp (API o manual), comprobantes, confirmación, plazo vencido, reprogramación, atención y saldo, agenda, cursos y sesiones, pedidos con reserva de 48 h, inventario, ventas, gastos, reportes, mensajes y auditoría.
 
 Tecnologías: **Next.js 15 (React 19, TypeScript)**, **Node.js 22**, **PostgreSQL 16** (controlador `pg`), Tailwind CSS 4, `jose` (sesiones firmadas), `bcryptjs`, Vitest.
 
@@ -45,14 +45,14 @@ En la carpeta del proyecto:
 copy .env.example .env.local      # revisa los valores; cambia SESSION_SECRET y ADMIN_PASSWORD
 npm install
 npm run db:crear                  # crea las 30 tablas (db/schema.sql)
-npm run db:semilla                # usuario de Andrea, configuración, servicios y cursos
+npm run db:semilla                # usuario administrador, configuración, servicios y cursos
 npm run db:demo                   # opcional: 6 productos de ejemplo y una sesión grupal abierta
 npm run build
 npm start
 ```
 
 - Sitio de la clienta: <http://localhost:3000> (ábrelo también desde el teléfono con la IP de la computadora, por ejemplo `http://192.168.1.10:3000`, si están en la misma red Wi-Fi).
-- Panel de Andrea: <http://localhost:3000/panel> — usuario `andrea`, contraseña la de `ADMIN_PASSWORD`. Cámbiala en **Configuración**.
+- Panel de administración: <http://localhost:3000/panel> — usuario `admin`, contraseña la de `ADMIN_PASSWORD`. Cámbiala en **Configuración**.
 
 Para trabajar en el código con recarga automática: `npm run dev`.
 
@@ -97,7 +97,7 @@ src/modulos/                  Lógica por módulo lógico del diseño (Corte 3, 
   pedidos.ts                    MOD-07 Catálogo, carrito y pedidos (reserva de 48 h)
   inventario.ts                 MOD-08 Inventario, ventas y gastos
   reportes.ts                   MOD-09 Panel y reportes
-  seguridad.ts                  MOD-10 Sesión de Andrea, auditoría y notificaciones
+  seguridad.ts                  MOD-10 Sesión de administración, auditoría y notificaciones
   planificador.ts               MOD-11 Planificador de tareas (cada minuto)
 src/app/(publico)/            Páginas de la clienta (P01–P18)
 src/app/panel/                Páginas del panel (A01–A22) y acciones del servidor

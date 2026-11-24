@@ -1,4 +1,4 @@
-// Envío de correos (códigos de la cuenta de Andrea).
+// Envío de correos (códigos de la cuenta de la administradora).
 // - MAIL_MODE=simulado (por defecto): no sale ningún correo; el mensaje queda en la consola del servidor y la
 //   pantalla muestra el código para poder probar. Nunca usar este modo en producción.
 // - MAIL_MODE=smtp: envía de verdad con SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASS y MAIL_FROM

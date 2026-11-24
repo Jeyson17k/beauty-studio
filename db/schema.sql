@@ -74,7 +74,7 @@ CREATE TABLE solicitud_actividad (
   CHECK ((tipo='servicio' AND servicio_id IS NOT NULL AND sesion_id IS NULL) OR (tipo='curso' AND sesion_id IS NOT NULL AND servicio_id IS NULL)),
   CHECK (NOT fuera_local OR direccion IS NOT NULL),
   CHECK (tipo IN ('servicio','curso')),
-  CHECK (origen_cancelacion IS NULL OR origen_cancelacion IN ('clienta','andrea'))
+  CHECK (origen_cancelacion IS NULL OR origen_cancelacion IN ('clienta','negocio'))
 );
 
 CREATE TABLE foto_solicitud (

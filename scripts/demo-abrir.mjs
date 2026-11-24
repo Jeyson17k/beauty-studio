@@ -1,4 +1,4 @@
-// Enciende el sistema y, cuando está listo, abre el navegador en el inicio de sesión de Andrea (para la demostración).
+// Enciende el sistema y, cuando está listo, abre el navegador en el inicio de sesión del panel (para la demostración).
 // Uso: npm run demo
 import { spawn } from "node:child_process";
 import { createRequire } from "node:module";

@@ -25,7 +25,7 @@ export default async function DetalleCurso({ params }: { params: Promise<{ id: s
         {c.modalidad === "individual" ? (
           <div className="tarjeta max-w-xl p-6">
             <p className="font-titulo text-xl font-semibold uppercase tracking-wide">Clase individual</p>
-            <p className="mt-1 text-sm text-gris-600">Eliges la fecha y la hora; Andrea te confirma en la cotización.</p>
+            <p className="mt-1 text-sm text-gris-600">Eliges la fecha y la hora; te lo confirmamos en la cotización.</p>
             <Link href={`/solicitar/curso?curso=${c.id}`} className="btn-primario mt-5 w-full sm:w-auto">
               Solicitar clase individual
             </Link>
@@ -36,7 +36,7 @@ export default async function DetalleCurso({ params }: { params: Promise<{ id: s
             <div className="mt-4 grid gap-3 md:grid-cols-2">
               {sesiones.length === 0 && (
                 <div className="md:col-span-2">
-                  <Vacio>Andrea todavía no ha abierto sesiones de este curso.</Vacio>
+                  <Vacio>Todavía no hay sesiones abiertas de este curso.</Vacio>
                 </div>
               )}
               {sesiones.map((s) => (

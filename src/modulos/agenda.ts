@@ -222,7 +222,7 @@ export type CasillaCalendario = { i: string; f: string; t: "o" | "e" | "p"; e?: 
 
 /**
  * Datos del calendario para elegir fecha y hora (próximos 120 días). La vista pública solo trae intervalos ocupados, sin datos personales (RN-05.6).
- * El panel de Andrea suma el nombre de la clienta, el origen (web o registro directo) y las solicitudes aún sin cotizar.
+ * El panel de la administradora suma el nombre de la clienta, el origen (web o registro directo) y las solicitudes aún sin cotizar.
  */
 export async function datosCalendario(admin: boolean): Promise<CasillaCalendario[]> {
   const desde = new Date();
@@ -249,14 +249,14 @@ export async function datosCalendario(admin: boolean): Promise<CasillaCalendario
   );
   const pendientes: CasillaCalendario[] = pend.map((x) => ({
     i: new Date(x.inicio).toISOString(), f: new Date(new Date(x.inicio).getTime() + x.dur * 60_000).toISOString(), t: "p",
-    e: `${x.actividad} · ${x.clienta} · ${x.directo ? "registrada por Andrea" : "solicitada en la web"}`,
+    e: `${x.actividad} · ${x.clienta} · ${x.directo ? "registrada por el negocio" : "solicitada en la web"}`,
   }));
   return [...ocupados, ...pendientes];
 }
 
 export type PendienteAgenda = { id: number; inicio: Date; actividad: string; clienta: string; directo: boolean; fuera_local: boolean };
 
-/** Solicitudes aún sin cotizar con fecha pedida: no bloquean horario (RN-05.7), pero Andrea las ve en la agenda, vengan de la web o de su registro directo. */
+/** Solicitudes aún sin cotizar con fecha pedida: no bloquean horario (RN-05.7), pero la administradora las ve en la agenda, vengan de la web o de su registro directo. */
 export async function pendientesAgenda(desde: Date, hasta: Date): Promise<PendienteAgenda[]> {
   return q<PendienteAgenda>(
     `SELECT s.id, s.inicio_solicitado AS inicio, COALESCE(sv.nombre, cu.nombre, 'Actividad') AS actividad, c.nombre AS clienta, s.registro_directo AS directo, s.fuera_local

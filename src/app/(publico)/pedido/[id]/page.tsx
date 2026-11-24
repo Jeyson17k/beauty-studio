@@ -10,7 +10,7 @@ import { EncabezadoPagina } from "@/componentes/publico";
 export const dynamic = "force-dynamic";
 export const metadata = { title: "Pedido enviado" };
 
-// P18 Pedido enviado (CU-09): el pedido queda registrado en el panel de Andrea; ella coordina disponibilidad, entrega y pago por WhatsApp.
+// P18 Pedido enviado (CU-09): el pedido queda registrado en el panel; el negocio coordina disponibilidad, entrega y pago por WhatsApp.
 export default async function PedidoListo({ params }: { params: Promise<{ id: string }> }) {
   const id = Number((await params).id);
   const s = await sesionClienta();
@@ -47,7 +47,7 @@ export default async function PedidoListo({ params }: { params: Promise<{ id: st
         Entrega: {p.tipo_entrega === "delivery" ? `delivery a ${p.direccion} (costo por confirmar)` : "retiro en el local"}.
       </p>
       <div className="mt-4 rounded-2xl bg-ok-100 px-4 py-3 text-[15px] text-ok-700">
-        <p className="font-semibold">Tu pedido ya llegó al panel de Andrea.</p>
+        <p className="font-semibold">Tu pedido ya fue recibido por el negocio.</p>
         <p className="mt-1 text-sm">
           Ella revisará la disponibilidad y te escribirá por WhatsApp al {mostrarWhatsApp(s.whatsapp)} para confirmar {p.tipo_entrega === "delivery" ? "el costo del delivery y la forma de pago" : "la forma de pago y cuándo puedes retirarlo"}.
         </p>

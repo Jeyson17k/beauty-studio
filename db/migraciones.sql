@@ -51,3 +51,31 @@ CREATE TABLE IF NOT EXISTS archivo_guardado (
   creado_en TIMESTAMPTZ NOT NULL DEFAULT now(),
   PRIMARY KEY (clave)
 );
+
+-- ---------- Versión general (sin datos de una persona o negocio concreto) ----------
+-- El usuario inicial del panel pasa de «andrea» a «admin» (solo si todavía existe «andrea» y no hay un «admin»).
+UPDATE usuario_admin SET usuario = 'admin'
+ WHERE usuario = 'andrea' AND NOT EXISTS (SELECT 1 FROM usuario_admin WHERE usuario = 'admin');
+
+-- El origen de una cancelación hecha por el negocio pasa de 'andrea' a 'negocio'.
+DO $$
+DECLARE r record;
+BEGIN
+  FOR r IN SELECT conname FROM pg_constraint WHERE conrelid = 'solicitud_actividad'::regclass AND contype = 'c' AND pg_get_constraintdef(oid) LIKE '%origen_cancelacion%' LOOP
+    EXECUTE format('ALTER TABLE solicitud_actividad DROP CONSTRAINT %I', r.conname);
+  END LOOP;
+  UPDATE solicitud_actividad SET origen_cancelacion = 'negocio' WHERE origen_cancelacion = 'andrea';
+  ALTER TABLE solicitud_actividad ADD CONSTRAINT solicitud_actividad_origen_cancelacion_check CHECK (origen_cancelacion IS NULL OR origen_cancelacion IN ('clienta','negocio'));
+END $$;
+
+-- Valores iniciales de la configuración: solo se reemplazan los que todavía son los de fábrica anteriores.
+UPDATE configuracion SET valor = 'la cuenta que te indiquemos por este chat' WHERE clave = 'datos_pago' AND valor = 'la cuenta que Andrea indique por este chat';
+UPDATE configuracion SET valor = '' WHERE clave = 'whatsapp_negocio' AND valor = '+50586190898';
+UPDATE configuracion SET valor = 'nuestro local' WHERE clave = 'lugar_local' AND valor = 'mi salón en Los Cedros, León';
+
+-- Texto de los cursos de fábrica y fotos de los servicios de fábrica: ahora son imágenes neutras.
+UPDATE curso SET descripcion = replace(descripcion, ' con Andrea.', '.') WHERE descripcion LIKE '%con Andrea.';
+UPDATE servicio SET imagen_url = '/img/neutro_cuadro_1.jpg' WHERE imagen_url IN ('/img/svc_social.jpg', '/img/svc_makeup.jpg');
+UPDATE servicio SET imagen_url = '/img/neutro_cuadro_2.jpg' WHERE imagen_url IN ('/img/svc_novia.jpg', '/img/svc_makeup2.jpg');
+UPDATE servicio SET imagen_url = '/img/neutro_cuadro_3.jpg' WHERE imagen_url IN ('/img/svc_peinado.jpg', '/img/svc_hair.jpg');
+UPDATE servicio SET imagen_url = '/img/neutro_cuadro_4.jpg' WHERE imagen_url IN ('/img/svc_combo.jpg', '/img/svc_hair2.jpg');

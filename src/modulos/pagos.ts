@@ -1,5 +1,5 @@
 // MOD-05 Pagos y confirmación (CU-18, CU-19, CU-22, CU-27; RF-13, RF-14, RF-15, RF-31).
-// El sistema no valida depósitos: Andrea comprueba el dinero y registra la validación (RN-13.4, RN-13.5).
+// El sistema no valida depósitos: la administradora comprueba el dinero y registra la validación (RN-13.4, RN-13.5).
 import { q, q1, tx } from "@/lib/db";
 import { ReglaError } from "@/lib/errores";
 import { monto as validarMonto } from "@/lib/validar";
@@ -9,7 +9,7 @@ import { auditar } from "./seguridad";
 import { SOL } from "./estados";
 import { enviarAvisoConfirmacion } from "./whatsapp/servicio";
 
-/** CU-18: Andrea carga el comprobante que la clienta le envió por WhatsApp (RN-13.1, RN-13.7). */
+/** CU-18: la administradora carga el comprobante que la clienta le envió por WhatsApp (RN-13.1, RN-13.7). */
 export async function cargarComprobante(uid: number, solicitudId: number, archivo: File, monto: number, pagadoEn: Date) {
   if (!archivo || archivo.size === 0) throw new ReglaError("Adjunta el comprobante.");
   if (!(monto > 0)) throw new ReglaError("Escribe el monto del pago.");
@@ -84,7 +84,7 @@ export async function rechazarComprobante(uid: number, comprobanteId: number, mo
   });
 }
 
-/** CU-22: sin pago oportuno, Andrea declara la expiración y se libera la reserva (RN-15.4 a RN-15.6). */
+/** CU-22: sin pago oportuno, la administradora declara la expiración y se libera la reserva (RN-15.4 a RN-15.6). */
 export async function declararExpiracion(uid: number, solicitudId: number, motivo: string) {
   return tx(async (c) => {
     const s = await q1<{ estado: string }>("SELECT estado FROM solicitud_actividad WHERE id = $1 FOR UPDATE", [solicitudId], c);

@@ -12,7 +12,7 @@ import { accionCrearPedido, accionOlvidarme } from "../../acciones";
 export const dynamic = "force-dynamic";
 export const metadata = { title: "Finalizar pedido" };
 
-// Finalizar pedido (CU-09, RF-22): confirma los datos de la clienta y la entrega, y envía el pedido al panel de Andrea.
+// Finalizar pedido (CU-09, RF-22): confirma los datos de la clienta y la entrega, y envía el pedido al panel del negocio.
 export default async function FinalizarPedido() {
   const s = await sesionClienta();
   if (!s) redirect("/identificarse?siguiente=/carrito/finalizar");
@@ -58,7 +58,7 @@ export default async function FinalizarPedido() {
             <CamposLugar etiquetas={["Retiro en el local", "Delivery"]} />
           </Formulario>
           <p className="ayuda mt-3">
-            Andrea recibe tu pedido en su panel y te escribe por WhatsApp para confirmar la disponibilidad, el costo del delivery y la forma de pago. Enviarlo no aparta los productos ni cobra nada.
+            El negocio recibe tu pedido en su panel y te escribe por WhatsApp para confirmar la disponibilidad, el costo del delivery y la forma de pago. Enviarlo no aparta los productos ni cobra nada.
           </p>
           <Link href="/catalogo" className="mt-3 inline-block text-sm font-semibold text-oro-700 hover:underline">
             ← Seguir viendo el catálogo

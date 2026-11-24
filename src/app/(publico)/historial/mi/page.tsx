@@ -60,7 +60,7 @@ export default async function MiHistorial() {
           </article>
         ))}
       </div>
-      <p className="mt-5 text-xs text-gris-600">Para cambios o dudas escribe a Andrea por WhatsApp. La sesión se cierra sola después de 15 minutos.</p>
+      <p className="mt-5 text-xs text-gris-600">Para cambios o dudas escríbenos por WhatsApp. La sesión se cierra sola después de 15 minutos.</p>
       </div>
     </div>
   );

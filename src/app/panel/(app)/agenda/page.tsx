@@ -71,7 +71,7 @@ export default async function Agenda({ searchParams }: { searchParams: Promise<{
                         <p className="text-sm">{f.actividad}</p>
                         <p className="text-xs text-gris-600">
                           {f.sesion_id ? `${f.inscritas ?? 0}/${f.capacidad} inscritas` : `${f.clienta} · ${f.fuera_local ? "domicilio" : "local"}`}
-                          {!f.sesion_id && ` · ${f.directo ? "registrada por Andrea" : "desde la web"}`}
+                          {!f.sesion_id && ` · ${f.directo ? "registrada por el negocio" : "desde la web"}`}
                         </p>
                         {!f.sesion_id && f.estado === "Provisional" && (
                           <p className="mt-1 inline-flex items-center gap-1.5 rounded-full bg-aviso-100 px-2 py-0.5 text-[11px] font-semibold text-aviso-700">
@@ -98,7 +98,7 @@ export default async function Agenda({ searchParams }: { searchParams: Promise<{
                         <p className="text-xs font-semibold">{hora(f.inicio)} · pedida</p>
                         <p className="text-sm">{f.actividad}</p>
                         <p className="text-xs text-gris-600">
-                          {f.clienta} · {f.directo ? "registrada por Andrea" : "desde la web"} · sin cotizar
+                          {f.clienta} · {f.directo ? "registrada por el negocio" : "desde la web"} · sin cotizar
                         </p>
                       </Link>
                     </li>

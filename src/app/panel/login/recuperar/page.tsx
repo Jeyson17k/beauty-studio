@@ -31,8 +31,8 @@ export default async function Recuperar({ searchParams }: { searchParams: Promis
         {correo
           ? "¿Ya no tienes acceso a tu correo? Usa tu clave de emergencia (la que generaste en Configuración) para registrar uno nuevo."
           : usuario
-            ? "Escribe el correo de Andrea y te enviamos tu usuario."
-            : "Escribe el correo de Andrea y te enviamos un código de 6 dígitos."}
+            ? "Escribe el correo de la cuenta y te enviamos tu usuario."
+            : "Escribe el correo de la cuenta y te enviamos un código de 6 dígitos."}
       </p>
       <div className="mt-4">{correo ? <PerdiMiCorreo /> : usuario ? <RecordarUsuario /> : <RecuperarContrasena />}</div>
       <Link href="/panel/login" className="mt-5 block text-center text-sm font-semibold text-oro-700 hover:underline">

@@ -103,7 +103,7 @@ export async function cancelarSesion(uid: number, sesionId: number, motivo: stri
     );
     for (const i of inscritas) {
       await q(
-        "UPDATE solicitud_actividad SET estado = 'Cancelada', motivo_cierre = $2, origen_cancelacion = 'andrea', actualizado_en = now() WHERE id = $1",
+        "UPDATE solicitud_actividad SET estado = 'Cancelada', motivo_cierre = $2, origen_cancelacion = 'negocio', actualizado_en = now() WHERE id = $1",
         [i.id, `Sesión cancelada: ${motivo}`.slice(0, 150)],
         c,
       );

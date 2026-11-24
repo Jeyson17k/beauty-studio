@@ -16,7 +16,7 @@ export default async function IngresarCodigo({ searchParams }: { searchParams: P
       <div className="contenedor max-w-xl py-8 md:py-12">
       {modoWhatsApp() === "simulado" && (
         <div className="mb-5">
-          <Aviso tono="warn">Entorno de prueba: el código se ve en el panel de Andrea, en «Mensajes» → bandeja simulada.</Aviso>
+          <Aviso tono="warn">Entorno de prueba: el código se ve en el panel, en «Mensajes» → bandeja simulada.</Aviso>
         </div>
       )}
       <div className="tarjeta p-5 md:p-7">

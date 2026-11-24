@@ -1,5 +1,5 @@
 // npm run db:demo → carga productos de ejemplo con existencias y una sesión grupal abierta para presentar el sistema.
-// Son datos de demostración: Andrea registrará sus productos reales desde el panel.
+// Son datos de demostración: el negocio registrará sus productos reales desde el panel.
 import { readFileSync } from "fs";
 import path from "path";
 
@@ -16,7 +16,7 @@ async function main() {
   const { q1, pool } = await import("../src/lib/db");
   const { guardarProducto, registrarEntrada } = await import("../src/modulos/inventario");
   const { programarSesion } = await import("../src/modulos/catalogo");
-  const uid = (await q1<{ id: number }>("SELECT id FROM usuario_admin WHERE usuario = 'andrea'"))!.id;
+  const uid = (await q1<{ id: number }>("SELECT id FROM usuario_admin WHERE usuario = 'admin'"))!.id;
   const cat = async (n: string) => (await q1<{ id: number }>("SELECT id FROM categoria_producto WHERE nombre = $1", [n]))!.id;
   const productos: [string, string, string, number, number, number, number][] = [
     ["Base líquida mate (ejemplo)", "Maquillaje", "Cobertura media, acabado mate.", 650, 2, 6, 380],

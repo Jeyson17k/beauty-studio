@@ -10,7 +10,7 @@ afterAll(() => pool.end());
 describe("Archivar solicitudes", () => {
   it("PF-AR1 · una solicitud rechazada se archiva: sale de la lista, aparece en «Archivadas» y no se borra nada", async () => {
     const { id } = await solicitudServicio();
-    await rechazarOCancelar(UID, id, "No hay disponibilidad ese día", "andrea");
+    await rechazarOCancelar(UID, id, "No hay disponibilidad ese día", "negocio");
     expect((await listarSolicitudes()).some((f) => f.id === id)).toBe(true);
     await archivarSolicitud(UID, id);
     expect((await listarSolicitudes()).some((f) => f.id === id)).toBe(false);
@@ -23,7 +23,7 @@ describe("Archivar solicitudes", () => {
 
   it("PF-AR2 · una solicitud archivada se puede restaurar", async () => {
     const { id } = await solicitudServicio();
-    await rechazarOCancelar(UID, id, "No hay disponibilidad ese día", "andrea");
+    await rechazarOCancelar(UID, id, "No hay disponibilidad ese día", "negocio");
     await archivarSolicitud(UID, id);
     await archivarSolicitud(UID, id, false);
     expect((await listarSolicitudes()).some((f) => f.id === id)).toBe(true);

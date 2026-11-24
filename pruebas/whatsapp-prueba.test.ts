@@ -29,7 +29,7 @@ describe("WhatsApp de prueba y calendario", () => {
     expect(bandejaSimulada()[0].destino).toBe("+50588001234");
   });
 
-  it("PF-58 · la cita con cotización enviada aparece «Pendiente de pago» (E1) para Andrea y para el público, sin datos personales", async () => {
+  it("PF-58 · la cita con cotización enviada aparece «Pendiente de pago» (E1) para el negocio y para el público, sin datos personales", async () => {
     const { id } = await solicitudServicio();
     await guardarCotizacion(UID, id, 800, 60, null);
     await enviarCotizacion(UID, id);

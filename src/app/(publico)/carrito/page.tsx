@@ -82,7 +82,7 @@ export default async function Carrito() {
             <Link href="/carrito/finalizar" className="btn-primario w-full">
               Finalizar pedido
             </Link>
-            <p className="ayuda">Aquí no se paga nada. El pago y el delivery se acuerdan con Andrea después de recibir tu pedido.</p>
+            <p className="ayuda">Aquí no se paga nada. El pago y el delivery se acuerdan con el negocio después de recibir tu pedido.</p>
           </div>
         </div>
       )}

@@ -1,6 +1,6 @@
 // Sesiones firmadas (JWT HS256 con jose) en cookies httpOnly.
-// - bs_admin: sesión de Andrea en el panel (RN-02.4).
-// - bs_perfil: Andrea viendo la página como clienta. No da ningún acceso al panel: para volver se pide la contraseña.
+// - bs_admin: sesión de la administradora en el panel (RN-02.4).
+// - bs_perfil: la administradora viendo la página como clienta. No da ningún acceso al panel: para volver se pide la contraseña.
 // - bs_clienta: nombre y WhatsApp de la clienta durante la visita (RN-01.3, RN-01.5). No da acceso al historial.
 // - bs_hist: sesión de solo lectura del historial tras validar el código (RN-18.9).
 import { SignJWT, jwtVerify } from "jose";

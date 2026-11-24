@@ -25,7 +25,7 @@ function CamposServicio({ s }: { s?: { id: number; nombre: string; descripcion: 
         </label>
         <label>
           <span className="etiqueta-campo">Imagen (ruta)</span>
-          <input name="imagen_url" maxLength={255} defaultValue={s?.imagen_url ?? ""} className="campo" placeholder="/img/svc_makeup.jpg" />
+          <input name="imagen_url" maxLength={255} defaultValue={s?.imagen_url ?? ""} className="campo" placeholder="/img/neutro_cuadro_1.jpg" />
         </label>
         <label className="flex items-center gap-2 pt-6 text-sm">
           <input type="checkbox" name="activo" defaultChecked={s?.activo ?? true} className="h-4 w-4 accent-[#7a5c24]" /> Visible al público (activo)

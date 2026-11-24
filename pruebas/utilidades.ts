@@ -11,7 +11,7 @@ import { procesarAviso } from "@/modulos/whatsapp/servicio";
 export async function reiniciarBase() {
   await pool.query("DROP SCHEMA public CASCADE; CREATE SCHEMA public;");
   await pool.query(readFileSync(path.resolve("db/schema.sql"), "utf8"));
-  await q("INSERT INTO usuario_admin (usuario, hash_password, rol, activo) VALUES ('andrea', $1, 'Administradora', true)", [await bcrypt.hash("prueba-123456", 4)]);
+  await q("INSERT INTO usuario_admin (usuario, hash_password, rol, activo) VALUES ('admin', $1, 'Administradora', true)", [await bcrypt.hash("prueba-123456", 4)]);
   for (const [k, v] of Object.entries(CONFIG_INICIAL)) await q("INSERT INTO configuracion VALUES ($1,$2,$3)", [k, v.valor, v.descripcion]);
   await q("INSERT INTO servicio (nombre, descripcion, activo) VALUES ('Maquillaje social','Piel, ojos y labios',true), ('Peinado','Recogidos',true), ('Servicio inactivo','x',false)");
   await q(`INSERT INTO curso (nombre, descripcion, modalidad, duracion_min, activo) VALUES

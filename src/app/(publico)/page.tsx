@@ -2,26 +2,27 @@ import Link from "next/link";
 import Image from "next/image";
 import { cursosActivos, serviciosActivos } from "@/modulos/catalogo";
 import { InsigniaSeccion, PildorasNumeradas } from "@/componentes/publico";
+import { datosNegocio } from "@/lib/negocio";
 
 export const dynamic = "force-dynamic";
 
 // P01 Inicio. Estructura inspirada en el video de referencia (portada con «Conmigo podrás», áreas clave con fotos,
 // secciones numeradas y listas en píldoras), con los colores y el contenido de Beauty Studio.
 export default async function Inicio() {
-  const [servicios, cursos] = await Promise.all([serviciosActivos(), cursosActivos()]);
+  const [servicios, cursos, negocio] = await Promise.all([serviciosActivos(), cursosActivos(), datosNegocio()]);
   const areas = [
-    { titulo: "Maquillaje", img: "/img/area_maquillaje.jpg" },
-    { titulo: "Peinado", img: "/img/area_peinado.jpg" },
-    { titulo: "Cursos", img: "/img/area_cursos_v2.jpg" },
-    { titulo: "Productos", img: "/img/area_productos.jpg" },
+    { titulo: "Maquillaje", img: "/img/neutro_cuadro_1.jpg" },
+    { titulo: "Peinado", img: "/img/neutro_cuadro_2.jpg" },
+    { titulo: "Cursos", img: "/img/neutro_cuadro_3.jpg" },
+    { titulo: "Productos", img: "/img/neutro_cuadro_4.jpg" },
   ];
   return (
     <div className="relative isolate">
-      {/* Fondo de toda la página de inicio: foto del salón de Andrea, oscurecida. Ocupa solo esta página
+      {/* Fondo de toda la página de inicio: imagen neutra de fondo, oscurecida. Ocupa solo esta página
           (no cubre el pie) y se queda quieta al deslizar gracias al contenedor «sticky». */}
       <div aria-hidden className="absolute inset-0 -z-10 bg-negro-950">
         <div className="sticky top-0 h-dvh w-full overflow-hidden">
-          <Image src="/img/fondo_salon.jpg" alt="" fill priority sizes="100vw" className="object-cover object-center opacity-45 blur-[2px]" />
+          <Image src="/img/neutro_fondo.jpg" alt="" fill priority sizes="100vw" className="object-cover object-center opacity-45 blur-[2px]" />
         </div>
       </div>
 
@@ -32,11 +33,11 @@ export default async function Inicio() {
         <div aria-hidden className="pointer-events-none absolute -right-20 bottom-0 h-96 w-96 rounded-full bg-oro-500/10 blur-3xl" />
         <div className="contenedor relative grid items-center gap-10 py-10 md:grid-cols-[1.15fr_0.85fr] md:py-16 lg:py-20">
           <div>
-            <p className="text-xs font-semibold uppercase tracking-[0.3em] text-oro-300">Andrea Paola · Los Cedros, León</p>
+            <p className="text-xs font-semibold uppercase tracking-[0.3em] text-oro-300">{negocio.nombre}{negocio.ciudad ? ` · ${negocio.ciudad}` : ""}</p>
             <h1 className="titulo-grande mt-4 text-[2.6rem] sm:text-5xl lg:text-6xl">
               Maquillaje y peinado <span className="texto-oro">para tu momento especial</span>
             </h1>
-            <p className="mt-6 font-titulo text-lg uppercase tracking-[0.2em] text-white/80">Conmigo podrás:</p>
+            <p className="mt-6 font-titulo text-lg uppercase tracking-[0.2em] text-white/80">Con nosotros podrás:</p>
             <ul className="mt-3 grid gap-2 sm:max-w-md">
               {[
                 ["Solicitar", "tu cita en minutos"],
@@ -67,8 +68,8 @@ export default async function Inicio() {
           <div className="relative mx-auto w-full max-w-[340px] md:max-w-[420px]">
             <div aria-hidden className="absolute -inset-3 rounded-[48%_48%_32px_32px] border border-oro-300/40" />
             <div className="relative overflow-hidden rounded-[46%_46%_28px_28px] border-2 border-oro-300/70 bg-negro-900">
-              {/* Foto de Andrea con su certificado (recortada a 3:4 para no ocupar tanto alto): el texto va debajo */}
-              <Image src="/img/hero_andrea_v3.jpg" alt="Andrea Paola con su certificado" width={720} height={1280} priority className="block aspect-[3/4] w-full object-cover object-[center_32%]" />
+              {/* Imagen neutra de portada (3:4): el texto va debajo */}
+              <Image src="/img/neutro_retrato.jpg" alt="" width={900} height={1200} priority className="block aspect-[3/4] w-full object-cover" />
               <div className="bg-negro-900 px-5 pb-5 pt-3 text-center">
                 <p className="font-titulo text-xl font-semibold uppercase tracking-[0.14em]">Agenda abierta</p>
                 <p className="text-sm text-white/70">Graduaciones, bodas, sesiones de fotos y eventos</p>
@@ -132,7 +133,7 @@ export default async function Inicio() {
           <div>
             <InsigniaSeccion numero={2} titulo="Cursos de maquillaje" />
             <h2 className="titulo-grande mt-6 text-3xl md:text-4xl">
-              Aprende con <span className="texto-oro">Andrea</span>
+              Aprende <span className="texto-oro">con nosotros</span>
             </h2>
             <p className="mt-3 text-sm text-white/70">Sesiones de 3 horas. En las clases grupales cada participante se inscribe y paga por separado.</p>
             <div className="mt-6">
@@ -155,8 +156,8 @@ export default async function Inicio() {
           <div className="relative">
             <div className="rounded-3xl border border-white/10 bg-negro-800/60 p-3 shadow-2xl">
               <div className="grid grid-cols-2 gap-3">
-                <Image src="/img/curso_certificado.jpg" alt="Alumna con su certificado junto a Andrea" width={800} height={1000} className="aspect-[4/5] w-full rounded-2xl object-cover" />
-                <Image src="/img/curso_sesion.jpg" alt="Andrea maquillando a una alumna" width={800} height={1000} className="mt-8 aspect-[4/5] w-full rounded-2xl object-cover" />
+                <Image src="/img/neutro_vertical_1.jpg" alt="" width={800} height={1000} className="aspect-[4/5] w-full rounded-2xl object-cover" />
+                <Image src="/img/neutro_vertical_2.jpg" alt="" width={800} height={1000} className="mt-8 aspect-[4/5] w-full rounded-2xl object-cover" />
               </div>
             </div>
           </div>
@@ -173,15 +174,15 @@ export default async function Inicio() {
                 oscuro={false}
                 items={[
                   "Envías tu solicitud con la fecha, la hora y, si quieres, fotos de referencia.",
-                  "Andrea la revisa y te envía la cotización por WhatsApp.",
+                  "El negocio la revisa y te envía la cotización por WhatsApp.",
                   "Pagas el anticipo del 10 % dentro de 24 horas y envías el comprobante por WhatsApp.",
-                  "Andrea verifica el pago y confirma tu cita. El saldo se paga el día de la atención.",
+                  "El negocio verifica el pago y confirma tu cita. El saldo se paga el día de la atención.",
                 ]}
               />
             </div>
           </div>
           <div className="tarjeta overflow-hidden">
-            <Image src="/img/andrea_agenda.jpg" alt="Andrea Paola" width={1000} height={750} className="aspect-[4/3] w-full object-cover" />
+            <Image src="/img/neutro_paisaje.jpg" alt="" width={1200} height={900} className="aspect-[4/3] w-full object-cover" />
             <div className="p-5">
               <p className="font-titulo text-xl font-semibold uppercase tracking-wide">Revisa la agenda</p>
               <p className="mt-1 text-sm text-gris-600">Mira qué horarios ya están apartados o confirmados antes de elegir tu fecha.</p>
@@ -200,11 +201,11 @@ export default async function Inicio() {
 
       {/* ---------- 4. Catálogo ---------- */}
       <section className="relative overflow-hidden bg-negro-950 text-white">
-        <Image src="/img/banner.jpg" alt="" fill className="object-cover opacity-30" />
+        <Image src="/img/neutro_banner.jpg" alt="" fill className="object-cover opacity-30" />
         <div className="absolute inset-0 bg-gradient-to-r from-negro-950 via-negro-950/80 to-transparent" />
         <div className="contenedor relative py-14 md:py-20">
           <InsigniaSeccion numero={4} titulo="Productos de belleza" />
-          <h2 className="titulo-grande mt-6 max-w-xl text-3xl md:text-4xl">Lo que Andrea usa, ahora para ti</h2>
+          <h2 className="titulo-grande mt-6 max-w-xl text-3xl md:text-4xl">Lo que usamos, ahora para ti</h2>
           <p className="mt-3 max-w-md text-sm text-white/70">Arma tu pedido y envíaselo por WhatsApp. Retiro en el local o delivery.</p>
           <Link href="/catalogo" className="btn oro-degradado mt-7 px-7 py-3 text-sm uppercase tracking-wider text-negro-950">
             Ver catálogo

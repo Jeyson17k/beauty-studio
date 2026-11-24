@@ -77,7 +77,7 @@ export default async function SolicitarCurso({ searchParams }: { searchParams: P
                 <span className="etiqueta-campo">Comentario (opcional)</span>
                 <textarea name="descripcion" maxLength={300} rows={2} className="campo" placeholder="Ej.: es mi primera clase" />
               </label>
-              <p className="ayuda">Tu inscripción queda pendiente de revisión y no aparta cupo hasta que Andrea te envíe la cotización.</p>
+              <p className="ayuda">Tu inscripción queda pendiente de revisión y no aparta cupo hasta que te enviemos la cotización.</p>
               <p className="ayuda">Al enviar, te mandamos un código por WhatsApp para confirmar que el número es tuyo.</p>
             </Formulario>
           )}
@@ -97,10 +97,10 @@ function PasosLaterales() {
       <div className="mt-5">
         <PildorasNumeradas
           items={[
-            "Andrea revisa tu solicitud.",
+            "El negocio revisa tu solicitud.",
             "Te envía la cotización por WhatsApp.",
             "Pagas el anticipo del 10 % en 24 horas.",
-            "Andrea verifica el pago y confirma tu cita.",
+            "El negocio verifica el pago y confirma tu cita.",
           ]}
         />
       </div>

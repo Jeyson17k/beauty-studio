@@ -1,4 +1,4 @@
-// MOD-10 Seguridad y auditoría: inicio de sesión de Andrea (CU-10), auditoría (RNF-08) y notificaciones del panel.
+// MOD-10 Seguridad y auditoría: inicio de sesión de la administradora (CU-10), auditoría (RNF-08) y notificaciones del panel.
 import bcrypt from "bcryptjs";
 import { q, q1, Db, pool } from "@/lib/db";
 
@@ -27,7 +27,7 @@ export async function auditar(db: Db, usuarioId: number | null, accion: string, 
   );
 }
 
-/** Notifica a todas las administradoras activas (hoy, solo Andrea). */
+/** Notifica a todas las administradoras activas (hoy, solo la administradora). */
 export async function notificar(db: Db, tipo: string, mensaje: string, entidad?: string, entidadId?: number | null) {
   await q(
     `INSERT INTO notificacion (usuario_id, tipo, mensaje, entidad, entidad_id)

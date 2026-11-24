@@ -35,8 +35,8 @@ export default async function Listo({ searchParams }: { searchParams: Promise<{ 
         </div>
       )}
       <p className="mx-auto mt-5 max-w-sm text-[15px]">
-        Andrea revisará tu solicitud y te enviará la cotización por WhatsApp. Tu horario todavía no está apartado: se aparta cuando recibes la cotización y se
-        confirma cuando Andrea verifica tu anticipo.
+        Revisaremos tu solicitud y te enviaremos la cotización por WhatsApp. Tu horario todavía no está apartado: se aparta cuando recibes la cotización y se
+        confirma cuando verificamos tu anticipo.
       </p>
       <div className="mx-auto mt-6 flex max-w-sm flex-col gap-2 sm:max-w-md sm:flex-row sm:justify-center">
         <Link href="/historial" className="btn-borde">

@@ -10,7 +10,7 @@ const OPCIONES = [
   { href: "/panel/ventas", titulo: "Venta en el local", texto: "La clienta paga y se lleva el producto en el momento.", icono: "🧾" },
 ];
 
-// Andrea registra por la clienta lo mismo que ella haría desde la página (por si no puede entrar o prefiere WhatsApp).
+// La administradora registra por la clienta lo mismo que ella haría desde la página (por si no puede entrar o prefiere WhatsApp).
 export default function Registrar() {
   return (
     <>

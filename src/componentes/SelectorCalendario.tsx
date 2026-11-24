@@ -18,13 +18,13 @@ const horaTxt = (ms: number) => {
 };
 const MESES = ["enero", "febrero", "marzo", "abril", "mayo", "junio", "julio", "agosto", "septiembre", "octubre", "noviembre", "diciembre"];
 const DIAS = ["L", "M", "M", "J", "V", "S", "D"];
-const HORA_INICIO = 0; // Andrea atiende las 24 horas del día (RN-05.11)
+const HORA_INICIO = 0; // el negocio atiende las 24 horas del día (RN-05.11)
 const HORA_FIN = 24 * 60; // última hora de inicio: 11:30 p. m.
 const PASO = 30;
 
 /**
  * Calendario para elegir día y hora (RF-05, RN-05.1, RN-05.6, RN-05.7).
- * Los horarios ocupados y los pendientes de pago (apartado de 24 h) se bloquean; las solicitudes pendientes de revisión no bloquean y solo se muestran a Andrea.
+ * Los horarios ocupados y los pendientes de pago (apartado de 24 h) se bloquean; las solicitudes pendientes de revisión no bloquean y solo se muestran a la administradora.
  * Envía el valor como «AAAA-MM-DDTHH:mm» en el campo `nombre`, igual que un datetime-local.
  */
 export function SelectorCalendario({ nombre = "inicio", casillas, minimo, duracionMin = 30, detalle = false }: { nombre?: string; casillas: Casilla[]; minimo: string; duracionMin?: number; detalle?: boolean }) {

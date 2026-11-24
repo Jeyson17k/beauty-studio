@@ -18,7 +18,7 @@
   unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
 }
 
-/* Marca Beauty Studio: negro, oro y crema (perfil de Instagram de Andrea; variables del prototipo de Figma). */
+/* Marca Beauty Studio: negro, oro y crema (perfil de Instagram de la administradora; variables del prototipo de Figma). */
 @theme {
   --color-negro-900: #14110d;
   --color-negro-800: #2e281f;
@@ -118,7 +118,7 @@ body { background: var(--color-crema-100); color: var(--color-texto-900); }
   @apply rounded-2xl border border-white/10 bg-negro-800/60;
 }
 
-/* ---------- Pantalla de acceso de Andrea (animaciones; se apagan si la persona pidió menos movimiento) ---------- */
+/* ---------- Pantalla de acceso de la administradora (animaciones; se apagan si la persona pidió menos movimiento) ---------- */
 @keyframes acc-flotar { 0%, 100% { transform: translate3d(0, 0, 0) scale(1); } 50% { transform: translate3d(48px, -36px, 0) scale(1.18); } }
 @keyframes acc-flotar-suave { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-9px); } }
 @keyframes acc-subir { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: none; } }
@@ -149,7 +149,7 @@ body { background: var(--color-crema-100); color: var(--color-texto-900); }
   .acc-aro { display: none; }
 }
 
-/* Pantalla de acceso (login y recuperación): fondo crema y tarjeta única con la foto de Andrea */
+/* Pantalla de acceso (login y recuperación): fondo crema y tarjeta única con la foto de la administradora */
 .acc-crema { background: radial-gradient(800px 520px at 8% 0%, rgba(201, 162, 94, 0.28), transparent 62%), radial-gradient(700px 520px at 100% 100%, rgba(201, 162, 94, 0.22), transparent 60%), #f6f1e7; }
 .acc-tarjeta-crema { background: #fffdf9; box-shadow: 0 40px 90px -30px rgba(60, 40, 10, 0.45), 0 0 0 1px rgba(156, 122, 60, 0.25); }
 .acc-tarjeta-crema .campo { transition: border-color 0.2s, box-shadow 0.2s; }

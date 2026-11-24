@@ -3,18 +3,18 @@ import { LogoPublico, PiePublico } from "@/componentes/publico";
 import { NavEscritorio, NavMovil } from "@/componentes/NavPublica";
 import { sesionClienta, sesionPerfilClienta } from "@/lib/sesion";
 import { mostrarWhatsApp } from "@/lib/telefono";
-import { leerConfig } from "@/lib/config";
+import { datosNegocio } from "@/lib/negocio";
 import { cantidadCarrito } from "@/modulos/pedidos";
 import { accionOlvidarme } from "./acciones";
 
 // Interfaz pública P01 a P18: se adapta al teléfono (barra inferior) y a la computadora (barra superior) (RNF-01).
 export default async function LayoutPublico({ children }: { children: React.ReactNode }) {
-  const [clienta, config, perfil] = await Promise.all([sesionClienta(), leerConfig(), sesionPerfilClienta()]);
+  const [clienta, negocio, perfil] = await Promise.all([sesionClienta(), datosNegocio(), sesionPerfilClienta()]);
   const enCarrito = clienta ? await cantidadCarrito(clienta.cid) : 0;
   return (
     <div className="flex min-h-dvh flex-col bg-crema-50">
       {perfil && (
-        // Andrea viendo la página como clienta: para volver al panel se pide la contraseña
+        // La administradora viendo la página como clienta: para volver al panel se pide la contraseña
         <div className="bg-oro-200 text-negro-950">
           <div className="contenedor flex flex-wrap items-center justify-between gap-2 py-1.5 text-xs">
             <span>
@@ -29,7 +29,7 @@ export default async function LayoutPublico({ children }: { children: React.Reac
       <header className="sticky top-0 z-30 border-b border-white/10 bg-negro-950/95 backdrop-blur">
         <div className="contenedor flex items-center justify-between gap-4 py-3">
           <Link href="/" aria-label="Inicio">
-            <LogoPublico />
+            <LogoPublico nombre={negocio.nombre} ciudad={negocio.ciudad} />
           </Link>
           <NavEscritorio />
           <div className="flex items-center gap-2">
@@ -58,7 +58,7 @@ export default async function LayoutPublico({ children }: { children: React.Reac
       </header>
       <main className="flex-1">{children}</main>
       <div className="pb-[72px] lg:pb-0">
-        <PiePublico whatsapp={config.whatsapp_negocio} />
+        <PiePublico nombre={negocio.nombre} ciudad={negocio.ciudad} direccion={negocio.direccion} whatsapp={negocio.whatsapp} />
       </div>
       <NavMovil />
     </div>

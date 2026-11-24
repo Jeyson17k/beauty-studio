@@ -15,7 +15,7 @@ export default async function Login({ searchParams }: { searchParams: Promise<{ 
   return (
     <PantallaAcceso>
       <h2 className="font-titulo text-2xl font-semibold uppercase tracking-wide">Iniciar sesión</h2>
-      <p className="mt-1 text-sm text-gris-600">Bienvenida de nuevo, Andrea.</p>
+      <p className="mt-1 text-sm text-gris-600">Bienvenida de nuevo.</p>
       <Formulario accion={accionLogin} boton="Entrar" claseBoton="btn acc-boton-oscuro" botonAncho className="mt-6 space-y-4">
         <input type="hidden" name="siguiente" value={siguiente ?? "/panel"} />
         <label className="block">
