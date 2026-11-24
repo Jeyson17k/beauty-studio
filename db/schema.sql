@@ -493,3 +493,12 @@ CREATE INDEX ix_cliente_whatsapp ON cliente (whatsapp);
 CREATE UNIQUE INDEX ux_cotizacion_vigente ON cotizacion (solicitud_id) WHERE vigente;  -- una cotización vigente por solicitud
 CREATE UNIQUE INDEX ux_agenda_solicitud_activa ON actividad_agenda (solicitud_id) WHERE estado IN ('Provisional','Confirmada');  -- RN-05.5
 CREATE UNIQUE INDEX ux_pago_anticipo ON pago (solicitud_id) WHERE tipo = 'Anticipo';  -- un anticipo por solicitud (RN-11.8, RN-30.9)
+
+-- Fotos de referencia, comprobantes e imágenes de productos (se guardan en la base para que no dependan de un disco del servidor)
+CREATE TABLE archivo_guardado (
+  clave VARCHAR(200) NOT NULL,
+  tipo VARCHAR(80) NOT NULL,
+  datos BYTEA NOT NULL,
+  creado_en TIMESTAMPTZ NOT NULL DEFAULT now(),
+  PRIMARY KEY (clave)
+);

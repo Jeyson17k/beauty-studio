@@ -8,12 +8,17 @@ types.setTypeParser(20, (v) => Number(v));
 
 const g = globalThis as unknown as { __bsPool?: Pool };
 
-export const pool: Pool =
-  g.__bsPool ??
-  (g.__bsPool = new Pool({
+function nuevoPool(): Pool {
+  const p = new Pool({
     connectionString: process.env.DATABASE_URL,
     max: 10,
-  }));
+  });
+  // Una base de datos en la nube puede cerrar conexiones en reposo; sin este aviso el error detendría el servidor.
+  p.on("error", (e) => console.error("Conexión a la base de datos cerrada:", e.message));
+  return p;
+}
+
+export const pool: Pool = g.__bsPool ?? (g.__bsPool = nuevoPool());
 
 export type Db = Pool | PoolClient;
 

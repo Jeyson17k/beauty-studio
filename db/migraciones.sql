@@ -42,3 +42,12 @@ ALTER TABLE producto ADD COLUMN IF NOT EXISTS eliminado_en TIMESTAMPTZ;
 ALTER TABLE mensaje_whatsapp ADD COLUMN IF NOT EXISTS pedido_id BIGINT;
 ALTER TABLE mensaje_whatsapp DROP CONSTRAINT IF EXISTS mensaje_whatsapp_tipo_check;
 ALTER TABLE mensaje_whatsapp ADD CONSTRAINT mensaje_whatsapp_tipo_check CHECK (tipo IN ('Cotización','Aviso de confirmación','Código de verificación','Confirmación de pedido'));
+
+-- Archivos (fotos y comprobantes) guardados en la base de datos en lugar de una carpeta del servidor
+CREATE TABLE IF NOT EXISTS archivo_guardado (
+  clave VARCHAR(200) NOT NULL,
+  tipo VARCHAR(80) NOT NULL,
+  datos BYTEA NOT NULL,
+  creado_en TIMESTAMPTZ NOT NULL DEFAULT now(),
+  PRIMARY KEY (clave)
+);
