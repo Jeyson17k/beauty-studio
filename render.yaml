@@ -1,0 +1,66 @@
+# Publicación de Beauty Studio en Render: base de datos, sitio web (con disco para fotos y comprobantes) y planificador.
+# Las claves se generan en Render y se leen en el panel de Render; no se guardan en este archivo ni en el repositorio.
+
+databases:
+  - name: beauty-studio-db
+    plan: basic-256mb
+    postgresMajorVersion: "16"
+    region: ohio
+
+services:
+  - type: web
+    name: beauty-studio
+    runtime: node
+    plan: starter
+    region: ohio
+    buildCommand: npm ci && npm run build
+    # Crea las tablas la primera vez y aplica cambios del modelo después; los datos existentes no se tocan.
+    preDeployCommand: npm run db:crear && npm run db:semilla
+    startCommand: npm start
+    healthCheckPath: /
+    disk:
+      name: archivos
+      mountPath: /var/data
+      sizeGB: 1
+    envVars:
+      - key: NODE_VERSION
+        value: "22"
+      - key: DATABASE_URL
+        fromDatabase:
+          name: beauty-studio-db
+          property: connectionString
+      - key: SESSION_SECRET
+        generateValue: true
+      - key: CRON_SECRET
+        generateValue: true
+      # Contraseña inicial del panel: se genera en Render, se lee en Environment y se cambia desde el panel.
+      - key: ADMIN_PASSWORD
+        generateValue: true
+      - key: STORAGE_DIR
+        value: /var/data
+      # Mientras no haya cuentas reales de correo y de WhatsApp, ambos quedan en modo simulado.
+      - key: MAIL_MODE
+        value: simulado
+      - key: WHATSAPP_MODE
+        value: simulado
+      # APP_URL (la dirección https pública del sitio) se agrega después de crear el servicio.
+
+  - type: cron
+    name: beauty-studio-planificador
+    runtime: node
+    plan: starter
+    region: ohio
+    schedule: "*/5 * * * *"
+    buildCommand: echo "sin compilacion"
+    startCommand: curl -fsS -X POST -H "Authorization: Bearer $CRON_SECRET" "http://$WEB_HOSTPORT/api/planificador"
+    envVars:
+      - key: CRON_SECRET
+        fromService:
+          type: web
+          name: beauty-studio
+          envVarKey: CRON_SECRET
+      - key: WEB_HOSTPORT
+        fromService:
+          type: web
+          name: beauty-studio
+          property: hostport

@@ -2,7 +2,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { jwtVerify, SignJWT } from "jose";
 
-const clave = () => new TextEncoder().encode(process.env.SESSION_SECRET || "solo-para-desarrollo-cambiar-en-env-local-000000");
+const clave = () => new TextEncoder().encode(process.env.SESSION_SECRET || (process.env.NODE_ENV === "production" ? "" : "solo-para-desarrollo-cambiar-en-env-local-000000"));
 
 async function valido(token?: string) {
   if (!token) return null;

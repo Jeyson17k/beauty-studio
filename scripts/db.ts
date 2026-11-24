@@ -33,6 +33,8 @@ async function migrar(c: Client) {
 }
 
 async function semilla(c: Client) {
+  const esLocal = /@(localhost|127\.0\.0\.1)(:|\/)/.test(process.env.DATABASE_URL ?? "");
+  if (!process.env.ADMIN_PASSWORD && !esLocal) throw new Error("Define ADMIN_PASSWORD antes de cargar los datos iniciales en una base de datos que no es local.");
   const pass = process.env.ADMIN_PASSWORD || "BeautyStudio2026!";
   await c.query(
     `INSERT INTO usuario_admin (usuario, hash_password, rol, activo) VALUES ('andrea', $1, 'Administradora', true)

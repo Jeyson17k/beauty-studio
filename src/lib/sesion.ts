@@ -6,7 +6,7 @@
 import { SignJWT, jwtVerify } from "jose";
 import { cookies } from "next/headers";
 
-const clave = () => new TextEncoder().encode(process.env.SESSION_SECRET || "solo-para-desarrollo-cambiar-en-env-local-000000");
+const clave = () => new TextEncoder().encode(process.env.SESSION_SECRET || (process.env.NODE_ENV === "production" ? "" : "solo-para-desarrollo-cambiar-en-env-local-000000"));
 const segura = process.env.NODE_ENV === "production" && (process.env.APP_URL ?? "").startsWith("https");
 
 export type SesionAdmin = { uid: number; usuario: string; rol: string };
