@@ -52,7 +52,7 @@ services:
     region: ohio
     schedule: "*/5 * * * *"
     buildCommand: echo "sin compilacion"
-    startCommand: curl -fsS -X POST -H "Authorization: Bearer $CRON_SECRET" "http://$WEB_HOSTPORT/api/planificador"
+    startCommand: 'curl -fsS -X POST -H "Authorization: Bearer $CRON_SECRET" "http://$WEB_HOSTPORT/api/planificador"'
     envVars:
       - key: CRON_SECRET
         fromService:
